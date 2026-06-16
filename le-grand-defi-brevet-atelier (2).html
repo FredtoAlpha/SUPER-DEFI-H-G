@@ -1,0 +1,939 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>L'Atelier du Brevet — Histoire · Géographie · EMC</title>
+<style>
+:root{
+  --bg:#141a28; --bg2:#1b2233; --panel:#202a3f;
+  --card:#f6e7c8; --card2:#efe0bd; --ink:#1f2533; --muted:#5d6373;
+  --line:#b8602a; --gold:#c79a3a; --red:#c0392b; --redd:#7d2017;
+  --green:#2f8f5b; --greend:#1c5e3a; --cream:#f4e4bf; --dim:#8a93a7;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(1200px 700px at 50% -150px,#243150 0%,var(--bg) 60%);
+  color:var(--cream); min-height:100vh;
+  font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased; line-height:1.5;
+}
+#app{max-width:880px;margin:0 auto;padding:18px 16px 60px}
+.serif{font-family:Georgia,"Iowan Old Style","Palatino Linotype",Palatino,"Times New Roman",serif}
+
+/* ---- barre du haut ---- */
+.bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.bar-l{display:flex;align-items:center;gap:10px;min-width:0}
+.bar-r{display:flex;align-items:center;gap:10px}
+.home-btn{background:var(--bg2);color:var(--cream);border:1px solid #38456a;border-radius:10px;
+  width:40px;height:40px;font-size:20px;cursor:pointer;flex:0 0 auto}
+.home-btn:hover{border-color:var(--gold)}
+.mode-name{font-weight:700;color:var(--gold);font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.score{background:#1b2030;border:2px solid var(--gold);color:var(--cream);border-radius:999px;
+  padding:6px 14px;font-weight:800;font-size:14px;white-space:nowrap}
+.timer{background:#2a1414;border:2px solid var(--red);color:#ffd9d2;border-radius:999px;
+  padding:6px 12px;font-weight:800;font-size:14px;font-variant-numeric:tabular-nums}
+.dots{display:flex;gap:6px;justify-content:center;margin:-4px 0 14px;flex-wrap:wrap}
+.dot{width:9px;height:9px;border-radius:50%;background:#33405f}
+.dot.on{background:var(--green)} .dot.cur{background:var(--gold);box-shadow:0 0 0 3px rgba(199,154,58,.25)}
+
+/* ---- carte ---- */
+.card{background:var(--card);color:var(--ink);border:3px solid var(--line);border-radius:18px;
+  padding:20px 20px 22px;box-shadow:0 12px 30px rgba(0,0,0,.35)}
+.eyebrow{font-size:12px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--red);margin-bottom:8px}
+.prompt{font-size:20px;font-weight:700;margin-bottom:16px;white-space:pre-line;line-height:1.35}
+.prompt.serif{font-size:22px}
+
+/* ---- choix ---- */
+.choices{display:flex;flex-direction:column;gap:10px}
+.choice{display:block;width:100%;text-align:left;background:#fff;border:2px solid #d9c089;border-radius:12px;
+  padding:13px 15px;font-size:16px;color:var(--ink);cursor:pointer;transition:.12s}
+.choice:hover{border-color:var(--line);transform:translateY(-1px)}
+.choice.good{background:#dff3e6;border-color:var(--green);font-weight:700}
+.choice.bad{background:#fae0db;border-color:var(--red)}
+.choice.dim{opacity:.55}
+.choice:disabled{cursor:default}
+
+/* ---- feedback ---- */
+.fb{margin-top:14px}
+.verdict{font-weight:800;font-size:16px;margin-bottom:6px}
+.v-good{color:var(--greend)} .v-bad{color:var(--redd)}
+.explain{background:#fff7e6;border-left:4px solid var(--gold);border-radius:8px;padding:11px 13px;font-size:15px;color:#4a4636}
+.cont{margin-top:14px;background:var(--ink);color:var(--cream);border:none;border-radius:12px;
+  padding:13px 20px;font-size:16px;font-weight:700;cursor:pointer;width:100%}
+.cont:hover{background:#2c3550}
+.cont:disabled{opacity:.4;cursor:default}
+.ghost{background:transparent;border:2px solid #cbb481;color:#6a6244;border-radius:12px;padding:11px 14px;font-weight:700;cursor:pointer}
+.row{display:flex;gap:10px;align-items:center;margin-top:12px}
+.row .cont{margin-top:0;flex:1}
+
+/* ---- chips / sélection ---- */
+.chips,.pool{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:6px}
+.chip{background:#fff;border:2px solid #d9c089;border-radius:999px;padding:9px 14px;font-size:15px;color:var(--ink);cursor:pointer}
+.chip:hover{border-color:var(--line)}
+.chip.sel{background:#eef3ff;border-color:#3b6fc0;box-shadow:0 0 0 3px rgba(59,111,192,.2)}
+.chip.good{background:#dff3e6;border-color:var(--green);font-weight:700}
+.chip.bad{background:#fae0db;border-color:var(--red)}
+.chip.placed{cursor:pointer}
+
+/* ---- colonnes (classement) ---- */
+.cols{display:flex;gap:12px;margin:6px 0 4px}
+.col{flex:1;background:#fff;border:2px dashed #cbb481;border-radius:12px;padding:10px;min-height:90px}
+.col:hover{border-color:var(--line)}
+.col-h{font-weight:800;font-size:13px;color:var(--redd);margin-bottom:8px;text-align:center}
+.col .chip{display:block;margin:6px 0;text-align:center}
+
+/* ---- remise en ordre ---- */
+.seq{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.seqitem{display:flex;align-items:center;gap:10px;background:#fff;border:2px solid #d9c089;border-radius:10px;padding:10px 12px;font-size:15px}
+.seqitem.good{background:#dff3e6;border-color:var(--green)}
+.num{flex:0 0 auto;width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--cream);
+  display:grid;place-items:center;font-weight:800;font-size:13px}
+
+/* ---- associations ---- */
+.match{display:flex;gap:12px;margin:6px 0}
+.mcol{flex:1;display:flex;flex-direction:column;gap:8px}
+.mitem{text-align:left;background:#fff;border:2px solid #d9c089;border-radius:10px;padding:11px 12px;font-size:14px;color:var(--ink);cursor:pointer}
+.mitem:hover{border-color:var(--line)}
+.mitem.sel{background:#eef3ff;border-color:#3b6fc0}
+.mitem.done{background:#fbf3dd;border-color:var(--gold)}
+.mitem.used{opacity:.4}
+.arrow{color:var(--red);font-weight:700;font-size:13px}
+.match-correct .mrow{background:#fff;border:1px solid #e0cd9a;border-radius:8px;padding:8px 10px;margin:6px 0;font-size:14px}
+
+/* ---- document / situation ---- */
+.doc{background:#fffdf6;border:1px solid #e3d4ab;border-left:5px solid var(--line);border-radius:10px;
+  padding:14px 16px;margin-bottom:16px;position:relative}
+.doc-type{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--line)}
+.doc-theme{display:inline-block;background:#f3e2bd;border:1px solid var(--gold);color:#8a6d1f;font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;border-radius:999px;padding:3px 9px;margin-bottom:7px}
+.doc-title{font-weight:800;font-size:17px;margin:2px 0 8px;color:var(--ink)}
+.doc-text{font-size:15.5px;color:#3a3a3a;line-height:1.55;font-family:Georgia,serif}
+.doc-source{margin-top:9px;font-size:12px;font-style:italic;color:var(--muted)}
+.schema-wrap{margin-bottom:14px;text-align:center}
+.cro{width:100%;max-width:360px;height:auto;border:1px solid #d9c089;border-radius:10px}
+
+/* ---- rédaction ---- */
+.write{width:100%;border:2px solid #d9c089;border-radius:12px;padding:12px;font-size:15px;font-family:inherit;color:var(--ink);resize:vertical;background:#fff}
+.write:focus{outline:none;border-color:var(--line)}
+.model-h{font-weight:800;color:var(--redd);font-size:13px;text-transform:uppercase;letter-spacing:.08em;margin:14px 0 6px}
+.model{background:#fff7e6;border-left:4px solid var(--green);border-radius:8px;padding:12px 14px;font-size:15px;color:#3f4030;font-family:Georgia,serif;line-height:1.55}
+.grid-h{font-weight:800;margin:14px 0 6px;font-size:14px;color:var(--ink)}
+.grid{margin:0;padding-left:20px;font-size:14.5px;color:#444}
+.grid li{margin:4px 0}
+.selfrate{margin-top:14px;font-weight:700;color:var(--ink);display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.rate{background:var(--ink);color:var(--cream);border:none;border-radius:10px;padding:10px 16px;font-weight:700;font-size:14px;cursor:pointer}
+.rate:hover{background:#2c3550}
+
+/* ---- accueil ---- */
+.hero{text-align:center;padding:18px 6px 8px}
+.kicker{color:var(--gold);font-weight:800;letter-spacing:.18em;text-transform:uppercase;font-size:12px}
+.hero h1{font-size:34px;margin:8px 0 6px;color:var(--cream);line-height:1.1}
+.hero .pen{color:var(--red)}
+.hero p{color:var(--dim);max-width:560px;margin:0 auto;font-size:15px}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:22px}
+.mode-card{background:var(--card);color:var(--ink);border:3px solid var(--line);border-radius:16px;
+  padding:16px;text-align:left;cursor:pointer;transition:.14s;display:flex;flex-direction:column;gap:4px}
+.mode-card:hover{transform:translateY(-3px);box-shadow:0 14px 26px rgba(0,0,0,.3)}
+.mc-num{font-size:12px;font-weight:800;color:var(--red);letter-spacing:.1em}
+.mc-title{font-size:19px;font-weight:800}
+.mc-desc{font-size:13.5px;color:#5a5644}
+.mode-card.exam{grid-column:1 / -1;background:#221016;border-color:var(--red);color:var(--cream)}
+.mode-card.exam .mc-title{color:#ffd9d2} .mode-card.exam .mc-desc{color:#d6a59c} .mode-card.exam .mc-num{color:var(--gold)}
+.foot{text-align:center;color:#56607a;font-size:12px;margin-top:24px}
+
+/* ---- bilan ---- */
+.bilan{text-align:center}
+.big-score{font-size:46px;font-weight:800;color:var(--line);margin:6px 0}
+.appver{position:fixed;right:12px;bottom:12px;z-index:99;background:#1b2030;color:#f4e4bf;border:2px solid var(--gold);
+  border-radius:999px;padding:6px 13px;font:700 12px/1 ui-monospace,monospace}
+
+@media(max-width:560px){
+  .modes{grid-template-columns:1fr}
+  .cols,.match{flex-direction:column}
+  .hero h1{font-size:27px}
+  .prompt{font-size:18px}
+}
+
+/* ---- réponse à corriger ---- */
+.copie{background:#fffdf8;border:1px solid #e3d4ab;border-radius:10px;padding:13px 15px;margin-bottom:14px;
+  background-image:repeating-linear-gradient(#fffdf8,#fffdf8 27px,#efe3c4 28px)}
+.copie-h{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--red);margin-bottom:6px}
+.copie-t{font-family:Georgia,serif;font-size:15.5px;color:#444;font-style:italic;line-height:28px}
+.sub{font-weight:700;color:var(--ink);margin:4px 0 10px;font-size:15px}
+
+/* ---- bulletin du brevet ---- */
+.hundred{font-size:22px;color:var(--muted);font-weight:700}
+.bullet{margin-top:8px;display:flex;flex-direction:column;gap:10px}
+.brow{display:flex;align-items:center;gap:10px}
+.blab{flex:0 0 42%;font-weight:700;font-size:14px;color:var(--ink)}
+.blab em{color:var(--muted);font-style:normal;font-weight:800}
+.bbar{flex:1;height:14px;background:#e7d7b0;border-radius:999px;overflow:hidden}
+.bfill{display:block;height:100%;border-radius:999px;transition:width .5s}
+.bf-good{background:var(--green)} .bf-mid{background:var(--gold)} .bf-low{background:var(--red)}
+.bpct{flex:0 0 42px;text-align:right;font-weight:800;font-size:14px;color:var(--ink)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="appver" id="appver">v3</div>
+<script>
+"use strict";
+var app=document.getElementById("app");
+
+/* ============ SON (Web Audio, aucun fichier) ============ */
+var actx=null;
+function beep(f,d,type,when,gain){ if(!actx)return; var o=actx.createOscillator(),g=actx.createGain();
+  o.type=type||"sine";o.frequency.value=f;o.connect(g);g.connect(actx.destination);
+  var t=actx.currentTime+(when||0);g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(gain||0.2,t+0.012);g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+  o.start(t);o.stop(t+d+0.03); }
+function sound(kind){ try{ if(!actx)actx=new (window.AudioContext||window.webkitAudioContext)();
+  if(actx.state==="suspended")actx.resume();
+  if(kind===true||kind==="good"){beep(660,0.12,"triangle",0);beep(990,0.16,"triangle",0.10);}
+  else if(kind===false||kind==="bad"){beep(170,0.24,"sawtooth",0,0.16);}
+  else if(kind==="win"){[523,659,784,1047].forEach(function(f,i){beep(f,0.2,"triangle",i*0.12);});}
+}catch(e){} }
+
+/* ============ utilitaires ============ */
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function pick(a,n){return shuffle(a).slice(0,n);}
+function fmt(s){if(s<0)s=0;var m=Math.floor(s/60),x=s%60;return m+":"+(x<10?"0":"")+x;}
+
+/* ============ état + séquence ============ */
+var S={score:0,steps:[],i:0,label:"",onEnd:null,timer:false,timeLeft:0,iv:null,brevet:null};
+function startTimer(){ S.iv=setInterval(function(){ S.timeLeft--; var t=document.getElementById("timer");
+  if(t)t.textContent=fmt(S.timeLeft); if(S.timeLeft<=0){stopTimer();bilan(true);} },1000); }
+function stopTimer(){ if(S.iv){clearInterval(S.iv);S.iv=null;} S.timer=false; }
+function runSequence(label,steps,onEnd){ S.score=0;S.steps=steps;S.i=0;S.label=label;S.onEnd=onEnd||function(){bilan(false);}; nextStep(); }
+function nextStep(){ if(S.i>=S.steps.length){ S.onEnd(); return; } S.steps[S.i](function(pts){ S.score+=(pts||0); S.i++; window.scrollTo(0,0); nextStep(); }); }
+
+function header(){
+  var prog="";
+  if(S.steps.length){ prog='<div class="dots">'; for(var k=0;k<S.steps.length;k++){ prog+='<span class="dot'+(k<S.i?" on":(k===S.i?" cur":""))+'"></span>'; } prog+='</div>'; }
+  var timer=S.timer?'<div class="timer" id="timer">'+fmt(S.timeLeft)+'</div>':'';
+  return '<div class="bar"><div class="bar-l"><button class="home-btn" data-act="home" title="Accueil">‹</button>'
+    +'<span class="mode-name">'+esc(S.label)+'</span></div>'
+    +'<div class="bar-r">'+timer+'<span class="score">'+S.score+' pts</span></div></div>'+prog;
+}
+document.addEventListener("click",function(e){ var h=e.target.closest("[data-act=home]"); if(h){stopTimer();home();} });
+
+/* ============ PRIMITIVES ============ */
+function showMCQ(cfg,done){
+  var h=header()+'<div class="card">';
+  if(cfg.docHtml)h+=cfg.docHtml;
+  if(cfg.eyebrow)h+='<div class="eyebrow">'+esc(cfg.eyebrow)+'</div>';
+  h+='<div class="prompt">'+cfg.prompt+'</div><div class="choices">';
+  cfg.choices.forEach(function(c,i){h+='<button class="choice" data-i="'+i+'">'+esc(c)+'</button>';});
+  h+='</div><div class="fb" id="fb"></div></div>'; app.innerHTML=h;
+  var ans=false;
+  app.querySelectorAll(".choice").forEach(function(b){ b.onclick=function(){ if(ans)return; ans=true;
+    var i=+b.dataset.i, ok=(i===cfg.answer);
+    app.querySelectorAll(".choice").forEach(function(x,j){ x.disabled=true;
+      x.classList.add(j===cfg.answer?"good":(j===i?"bad":"dim")); });
+    sound(ok);
+    var fb=document.getElementById("fb");
+    fb.innerHTML='<div class="verdict '+(ok?"v-good":"v-bad")+'">'+(ok?"Bonne réponse !":"Pas tout à fait.")+'</div>'
+      +(cfg.explain?'<div class="explain">'+cfg.explain+'</div>':'')
+      +'<button class="cont" id="cont">Continuer ›</button>';
+    document.getElementById("cont").onclick=function(){done(ok?10:0);};
+  };});
+}
+
+function showMultiSelect(cfg,done){
+  var chosen={};
+  function render(){
+    var h=header()+'<div class="card"><div class="eyebrow">'+esc(cfg.eyebrow)+'</div><div class="prompt">'+cfg.prompt+'</div><div class="chips">';
+    cfg.items.forEach(function(it,i){h+='<button class="chip'+(chosen[i]?" sel":"")+'" data-i="'+i+'">'+esc(it.t)+'</button>';});
+    h+='</div><button class="cont" id="val">Valider mes choix</button><div class="fb" id="fb"></div></div>'; app.innerHTML=h;
+    app.querySelectorAll(".chip").forEach(function(b){b.onclick=function(){var i=+b.dataset.i;chosen[i]=!chosen[i];render();};});
+    document.getElementById("val").onclick=score;
+  }
+  function score(){
+    var net=0,total=0;
+    cfg.items.forEach(function(it,i){ if(it.good){total++; if(chosen[i])net++;} else if(chosen[i])net--; });
+    app.querySelectorAll(".chip").forEach(function(b,i){ b.disabled=true;
+      if(cfg.items[i].good)b.classList.add("good"); else if(chosen[i])b.classList.add("bad"); });
+    document.getElementById("val").style.display="none";
+    sound(net>=total);
+    document.getElementById("fb").innerHTML='<div class="explain">'+(cfg.explain||"Les idées utiles sont surlignées en vert.")+'</div><button class="cont" id="cont">Continuer ›</button>';
+    document.getElementById("cont").onclick=function(){done(Math.max(0,net)*4);};
+  }
+  render();
+}
+
+function showClassify(cfg,done){
+  var place={},sel=null;
+  function render(){
+    var h=header()+'<div class="card"><div class="eyebrow">'+esc(cfg.eyebrow)+'</div><div class="prompt">'+cfg.prompt+'</div><div class="pool">';
+    cfg.items.forEach(function(it,i){ if(place[i]===undefined)h+='<button class="chip'+(sel===i?" sel":"")+'" data-i="'+i+'">'+esc(it.t)+'</button>'; });
+    h+='</div><div class="cols">';
+    cfg.cats.forEach(function(c,ci){ h+='<div class="col" data-c="'+ci+'"><div class="col-h">'+esc(c)+'</div>';
+      cfg.items.forEach(function(it,i){ if(place[i]===ci)h+='<button class="chip placed" data-p="'+i+'">'+esc(it.t)+'</button>'; });
+      h+='</div>'; });
+    h+='</div><button class="cont" id="val">Valider le classement</button><div class="fb" id="fb"></div></div>'; app.innerHTML=h;
+    app.querySelectorAll(".pool .chip").forEach(function(b){b.onclick=function(){sel=+b.dataset.i;render();};});
+    app.querySelectorAll(".col").forEach(function(col){col.onclick=function(){ if(sel!==null){place[sel]=+col.dataset.c;sel=null;render();} };});
+    app.querySelectorAll(".chip.placed").forEach(function(b){b.onclick=function(e){e.stopPropagation();delete place[+b.dataset.p];render();};});
+    document.getElementById("val").onclick=score;
+  }
+  function score(){
+    var ok=0; cfg.items.forEach(function(it,i){ if(place[i]===it.cat)ok++; });
+    sound(ok===cfg.items.length);
+    var h=header()+'<div class="card"><div class="eyebrow">'+esc(cfg.eyebrow)+'</div><div class="prompt">Correction</div><div class="cols">';
+    cfg.cats.forEach(function(c,ci){ h+='<div class="col"><div class="col-h">'+esc(c)+'</div>';
+      cfg.items.forEach(function(it,i){ if(it.cat===ci)h+='<div class="chip placed '+(place[i]===ci?"good":"bad")+'">'+esc(it.t)+'</div>'; });
+      h+='</div>'; });
+    h+='</div><div class="explain">'+ok+' / '+cfg.items.length+' idée(s) bien classée(s).</div><button class="cont" id="cont">Continuer ›</button></div>';
+    app.innerHTML=h; document.getElementById("cont").onclick=function(){done(ok*5);};
+  }
+  render();
+}
+
+function showOrder(cfg,done){
+  var seq=[];
+  function render(){
+    var h=header()+'<div class="card"><div class="eyebrow">'+esc(cfg.eyebrow)+'</div><div class="prompt">'+cfg.prompt+'</div><div class="seq">';
+    seq.forEach(function(i,pos){h+='<div class="seqitem"><span class="num">'+(pos+1)+'</span>'+esc(cfg.items[i].t)+'</div>';});
+    h+='</div><div class="pool">';
+    cfg.items.forEach(function(it,i){ if(seq.indexOf(i)<0)h+='<button class="chip" data-i="'+i+'">'+esc(it.t)+'</button>'; });
+    h+='</div><div class="row"><button class="ghost" id="undo">↶ Retirer</button>'
+      +'<button class="cont" id="val"'+(seq.length===cfg.items.length?"":" disabled")+'>Valider l\'ordre</button></div>'
+      +'<div class="fb" id="fb"></div></div>'; app.innerHTML=h;
+    app.querySelectorAll(".pool .chip").forEach(function(b){b.onclick=function(){seq.push(+b.dataset.i);render();};});
+    document.getElementById("undo").onclick=function(){seq.pop();render();};
+    var v=document.getElementById("val"); if(v&&!v.disabled)v.onclick=score;
+  }
+  function score(){
+    var n=0; seq.forEach(function(i,pos){ if(cfg.items[i].r===pos+1)n++; });
+    var perfect=(n===cfg.items.length);
+    sound(perfect);
+    var ordered=cfg.items.map(function(it){return it;}).sort(function(a,b){return a.r-b.r;});
+    var h=header()+'<div class="card"><div class="eyebrow">'+esc(cfg.eyebrow)+'</div><div class="prompt">'+(perfect?"Parfait !":"L'ordre attendu :")+'</div><div class="seq">';
+    ordered.forEach(function(o,pos){h+='<div class="seqitem good"><span class="num">'+(pos+1)+'</span>'+esc(o.t)+'</div>';});
+    h+='</div><div class="explain">'+n+' / '+cfg.items.length+' bien placé(s).</div><button class="cont" id="cont">Continuer ›</button></div>';
+    app.innerHTML=h; document.getElementById("cont").onclick=function(){done(perfect?15:n*2);};
+  }
+  render();
+}
+
+function showMatch(cfg,done){
+  var left=cfg.pairs.map(function(p){return p[0];});
+  var right=shuffle(cfg.pairs.map(function(p){return p[1];}));
+  var sel=null,link={};
+  function render(){
+    var h=header()+'<div class="card"><div class="eyebrow">'+esc(cfg.eyebrow)+'</div><div class="prompt">'+cfg.prompt+'</div>';
+    if(cfg.svg)h+='<div class="schema-wrap">'+cfg.svg+'</div>';
+    h+='<div class="match"><div class="mcol">';
+    left.forEach(function(l,i){h+='<button class="mitem'+(sel===i?" sel":"")+(link[i]?" done":"")+'" data-l="'+i+'">'+esc(l)+(link[i]?' <span class="arrow">→ '+esc(link[i])+'</span>':'')+'</button>';});
+    h+='</div><div class="mcol">';
+    right.forEach(function(r,j){ var used=false; for(var k in link){if(link[k]===r)used=true;}
+      h+='<button class="mitem'+(used?" used":"")+'" data-r="'+j+'"'+(used?" disabled":"")+'>'+esc(r)+'</button>'; });
+    h+='</div></div><button class="cont" id="val"'+(Object.keys(link).length===left.length?"":" disabled")+'>Valider</button><div class="fb" id="fb"></div></div>';
+    app.innerHTML=h;
+    app.querySelectorAll("[data-l]").forEach(function(b){b.onclick=function(){var i=+b.dataset.l; if(link[i]){delete link[i];sel=null;render();return;} sel=i;render();};});
+    app.querySelectorAll("[data-r]").forEach(function(b){b.onclick=function(){ if(sel===null||b.disabled)return; link[sel]=right[+b.dataset.r];sel=null;render(); };});
+    var v=document.getElementById("val"); if(v&&!v.disabled)v.onclick=score;
+  }
+  function score(){
+    var n=0; left.forEach(function(l,i){ var corr; cfg.pairs.forEach(function(p){if(p[0]===l)corr=p[1];}); if(link[i]===corr)n++; });
+    sound(n===left.length);
+    var h=header()+'<div class="card"><div class="eyebrow">'+esc(cfg.eyebrow)+'</div><div class="prompt">Correction de la légende</div><div class="match-correct">';
+    cfg.pairs.forEach(function(p){h+='<div class="mrow"><b>'+esc(p[0])+'</b> → '+esc(p[1])+'</div>';});
+    h+='</div><div class="explain">'+n+' / '+left.length+' bonne(s) association(s).</div><button class="cont" id="cont">Continuer ›</button></div>';
+    app.innerHTML=h; document.getElementById("cont").onclick=function(){done(n*5);};
+  }
+  render();
+}
+
+function showWrite(cfg,done){
+  var h=header()+'<div class="card">';
+  if(cfg.docHtml)h+=cfg.docHtml;
+  h+='<div class="eyebrow">'+esc(cfg.eyebrow)+'</div><div class="prompt">'+cfg.prompt+'</div>'
+    +'<textarea class="write" id="ta" rows="5" placeholder="Écris ta réponse ici, puis compare…"></textarea>'
+    +'<button class="cont" id="reveal">Voir une réponse possible</button><div class="fb" id="fb"></div></div>';
+  app.innerHTML=h;
+  document.getElementById("reveal").onclick=function(){
+    var extra=""; if(cfg.checklist){ extra='<div class="grid-h">Relis-toi avec cette grille :</div><ul class="grid">'
+      +cfg.checklist.map(function(c){return "<li>"+esc(c)+"</li>";}).join("")+'</ul>'; }
+    document.getElementById("fb").innerHTML='<div class="model-h">Réponse possible</div><div class="model">'+cfg.model+'</div>'+extra
+      +'<div class="selfrate">Et toi&nbsp;? <button class="rate" data-p="8">J\'avais l\'essentiel</button><button class="rate" data-p="3">À revoir</button></div>';
+    document.getElementById("reveal").style.display="none";
+    document.querySelectorAll(".rate").forEach(function(b){b.onclick=function(){sound(+b.dataset.p>=8);done(+b.dataset.p);};});
+  };
+}
+
+function showCorrige(cfg,done){
+  var chosen={};
+  function render(){
+    var h=header()+'<div class="card"><div class="eyebrow">Le correcteur, c\'est toi</div>'
+      +'<div class="prompt">Sujet : « '+esc(cfg.sujet)+' »</div>'
+      +'<div class="copie"><div class="copie-h">Réponse d\'élève à corriger</div><div class="copie-t">'+esc(cfg.mauvaise)+'</div></div>'
+      +'<div class="sub">Coche tous les défauts de cette réponse :</div><div class="chips">';
+    cfg.defauts.forEach(function(d,i){ h+='<button class="chip'+(chosen[i]?" sel":"")+'" data-i="'+i+'">'+esc(d.t)+'</button>'; });
+    h+='</div><button class="cont" id="val">Valider ma correction</button><div class="fb" id="fb"></div></div>'; app.innerHTML=h;
+    app.querySelectorAll(".chip").forEach(function(b){b.onclick=function(){var i=+b.dataset.i;chosen[i]=!chosen[i];render();};});
+    document.getElementById("val").onclick=score;
+  }
+  function score(){
+    var net=0,total=0;
+    cfg.defauts.forEach(function(d,i){ if(d.present){total++; if(chosen[i])net++;} else if(chosen[i])net--; });
+    app.querySelectorAll(".chip").forEach(function(b,i){ b.disabled=true; if(cfg.defauts[i].present)b.classList.add("good"); else if(chosen[i])b.classList.add("bad"); });
+    document.getElementById("val").style.display="none";
+    sound(net>=total);
+    document.getElementById("fb").innerHTML='<div class="explain">'+(cfg.explain||"Les vrais défauts sont surlignés en vert.")+'</div>'
+      +'<div class="model-h">Une réponse corrigée</div><div class="model">'+esc(cfg.corrige)+'</div>'
+      +'<button class="cont" id="cont">Continuer ›</button>';
+    document.getElementById("cont").onclick=function(){done(Math.max(0,net)*5);};
+  }
+  render();
+}
+
+/* ============ CONTENU ============ */
+var REP_MCQ=[
+ {q:"Quand se déroule la Première Guerre mondiale ?",c:["1914-1918","1939-1945","1870-1871","1900-1910"],a:0,e:"La Grande Guerre : 1914-1918."},
+ {q:"En quelle année Hitler arrive-t-il au pouvoir en Allemagne ?",c:["1917","1933","1945","1929"],a:1,e:"1933 : Hitler devient chancelier, début de la dictature nazie."},
+ {q:"Quand se déroule la Seconde Guerre mondiale ?",c:["1914-1918","1939-1945","1945-1989","1933-1939"],a:1,e:"La Seconde Guerre mondiale : 1939-1945."},
+ {q:"Que se passe-t-il en France en 1944-1945 ?",c:["la Libération et la refondation de la République","la défaite de 1940","la Commune de Paris","Mai 68"],a:0,e:"1944-1945 : Libération, gouvernement provisoire, droit de vote des femmes (1944)."},
+ {q:"Quelle date marque le traité de Rome (création de la CEE) ?",c:["1947","1957","1992","2002"],a:1,e:"1957 : traité de Rome, naissance du marché commun (CEE)."},
+ {q:"Que crée le traité de Maastricht en 1992 ?",c:["la CECA","l'Union européenne","l'ONU","l'OTAN"],a:1,e:"1992 : le traité de Maastricht crée l'Union européenne."},
+ {q:"En quelle année tombe le mur de Berlin ?",c:["1961","1989","1991","1957"],a:1,e:"1989 : chute du mur de Berlin, fin de la division de l'Europe."},
+ {q:"Quand débute la Ve République ?",c:["1946","1958","1969","1981"],a:1,e:"1958 : fondation de la Ve République (de Gaulle)."},
+ {q:"Quand les femmes obtiennent-elles le droit de vote en France ?",c:["1936","1944","1958","1974"],a:1,e:"1944 : droit de vote des femmes (premier vote en 1945)."},
+ {q:"En quelle année l'euro entre-t-il en circulation ?",c:["1992","1995","2002","2007"],a:2,e:"2002 : mise en circulation des pièces et billets en euros."},
+ {q:"À quelle période appartient la guerre froide ?",c:["1870-1914","1945-1991","1914-1918","depuis 2001"],a:1,e:"La guerre froide oppose les deux blocs de 1945 à 1991."},
+ {q:"Le génocide des Juifs et des Tsiganes a lieu pendant…",c:["la Première Guerre mondiale","la Seconde Guerre mondiale","la guerre froide","la guerre d'Algérie"],a:1,e:"Le génocide (la Shoah) a lieu pendant la Seconde Guerre mondiale."},
+ {q:"Quelle est la plus grande métropole française ?",c:["Lyon","Paris","Marseille","Lille"],a:1,e:"Paris est la première métropole et une ville mondiale."},
+ {q:"Que désigne un DROM ?",c:["un pays étranger","un département et région d'outre-mer","une région d'Allemagne","une intercommunalité"],a:1,e:"DROM = département et région d'outre-mer (Guadeloupe, Martinique, Guyane, Réunion, Mayotte)."},
+ {q:"La « diagonale des faibles densités » traverse la France…",c:["du nord-est au sud-ouest","d'est en ouest","du nord au sud","autour de Paris"],a:0,e:"Elle va du nord-est au sud-ouest : ce sont les espaces les moins peuplés."},
+ {q:"Combien d'États membres compte l'Union européenne aujourd'hui ?",c:["12","27","50","15"],a:1,e:"Depuis le retrait du Royaume-Uni (Brexit), l'UE compte 27 États membres."},
+ {q:"Qu'est-ce qu'une métropole ?",c:["une grande ville qui concentre population, activités et pouvoirs","un village isolé","un désert","une frontière"],a:0,e:"Une métropole concentre habitants, emplois, services et commandement."},
+ {q:"L'ONU, créée en 1945, a notamment pour rôle…",c:["de déclencher les guerres","de maintenir la paix dans le monde","de fixer les prix","de gouverner la France"],a:1,e:"L'ONU cherche à maintenir la paix (Casques bleus, médiation)."},
+ {q:"Quand a lieu le génocide des Arméniens ?",c:["en 1905","en 1915","en 1944","en 1962"],a:1,e:"Le génocide des Arméniens a lieu en 1915, pendant la Première Guerre mondiale."},
+ {q:"En 1940, que signe la France vaincue avec l'Allemagne ?",c:["une alliance offensive","l'armistice","un traité commercial","la paix de Versailles"],a:1,e:"Juin 1940 : armistice, la France est vaincue et occupée."},
+ {q:"Quelle est la date de l'appel du général de Gaulle à résister ?",c:["18 juin 1940","8 mai 1945","14 juillet 1789","11 novembre 1918"],a:0,e:"Le 18 juin 1940, de Gaulle appelle à poursuivre le combat depuis Londres."},
+ {q:"Que commémore-t-on le 6 juin 1944 ?",c:["la fin de la Première Guerre mondiale","le débarquement allié en Normandie","la prise de la Bastille","la chute du mur de Berlin"],a:1,e:"Le 6 juin 1944 : débarquement allié en Normandie."},
+ {q:"Quand se termine la Seconde Guerre mondiale en Europe ?",c:["le 11 novembre 1918","le 8 mai 1945","le 14 juillet 1945","en 1939"],a:1,e:"Capitulation de l'Allemagne le 8 mai 1945."},
+ {q:"Quand l'Algérie devient-elle indépendante ?",c:["en 1947","en 1954","en 1962","en 1989"],a:2,e:"L'Algérie devient indépendante en 1962, après une guerre commencée en 1954."},
+ {q:"Quand l'Inde devient-elle indépendante ?",c:["en 1945","en 1947","en 1962","en 1992"],a:1,e:"L'Inde devient indépendante en 1947 (rôle de Gandhi)."},
+ {q:"Que crée la loi de 1905 en France ?",c:["la Sécurité sociale","la séparation des Églises et de l'État (laïcité)","le droit de vote des femmes","la Ve République"],a:1,e:"La loi de 1905 établit la laïcité (séparation des Églises et de l'État)."},
+ {q:"Quand la Sécurité sociale est-elle créée en France ?",c:["en 1905","en 1945","en 1958","en 1981"],a:1,e:"La Sécurité sociale est créée en 1945, à la Libération."},
+ {q:"Quelle loi porte le nom de Simone Veil (1975) ?",c:["le droit de vote des femmes","l'autorisation de l'IVG","l'abolition de la peine de mort","la création de l'euro"],a:1,e:"La loi Veil (1975) autorise l'interruption volontaire de grossesse."},
+ {q:"Qu'est-ce qui est aboli en France en 1981 ?",c:["la peine de mort","le droit de vote","la Sécurité sociale","la laïcité"],a:0,e:"La peine de mort est abolie en 1981."},
+ {q:"Depuis quand le président de la Ve République est-il élu au suffrage universel direct ?",c:["1958","1962","1981","1995"],a:1,e:"Depuis 1962, le président est élu directement par les citoyens."},
+ {q:"Quel pays a quitté l'Union européenne récemment ?",c:["la France","le Royaume-Uni","l'Allemagne","l'Espagne"],a:1,e:"Le Royaume-Uni a quitté l'UE : c'est le Brexit."},
+ {q:"Que se passe-t-il pour l'UE en 2004 ?",c:["un départ d'États","un grand élargissement à l'Est","sa disparition","sa création"],a:1,e:"En 2004, l'UE s'élargit à plusieurs pays d'Europe de l'Est."},
+ {q:"Où se trouve le centre spatial français ?",c:["à Paris","à Kourou, en Guyane","à Marseille","à Berlin"],a:1,e:"Le centre spatial de Kourou est en Guyane (outre-mer)."},
+ {q:"Quel océan borde La Réunion ?",c:["l'océan Atlantique","l'océan Indien","l'océan Arctique","la mer Méditerranée"],a:1,e:"La Réunion est située dans l'océan Indien."},
+ {q:"Qu'est-ce que la métropolisation ?",c:["la concentration des hommes et des activités dans les grandes villes","le vidage des villes","la création de fermes","la fin des villes"],a:0,e:"La métropolisation : concentration croissante de la population et des activités dans les métropoles."},
+ {q:"Que désigne la francophonie ?",c:["l'ensemble des pays où l'on parle français","une région de France","une monnaie","un parti politique"],a:0,e:"La francophonie regroupe les pays et populations qui ont le français en partage."},
+ {q:"À quoi sert la Journée défense et citoyenneté (JDC) ?",c:["à voter","à informer les jeunes sur la défense et la citoyenneté","à payer des impôts","à choisir un métier"],a:1,e:"La JDC sensibilise les jeunes aux enjeux de la défense et de la citoyenneté."},
+ {q:"En démocratie, qui détient le pouvoir ?",c:["un seul chef","le peuple, par le vote","l'armée","un roi"],a:1,e:"En démocratie, le pouvoir vient du peuple, qui s'exprime par le vote."},
+ {q:"Que garantit la laïcité ?",c:["l'obligation d'une religion","la liberté de croire ou non, et la neutralité de l'État","l'interdiction de toute opinion","la fin des élections"],a:1,e:"La laïcité garantit la liberté de conscience et la neutralité de l'État."},
+ {q:"Qu'est-ce qu'un espace mondialisé ?",c:["un espace isolé","un espace très relié au monde par les échanges","un désert","une frontière fermée"],a:1,e:"Un espace mondialisé est fortement connecté au reste du monde."}
+];
+var REP_ORDER=[
+ {titre:"Remets ces événements du XXe siècle dans l'ordre.",ev:[
+   {t:"La Première Guerre mondiale",r:1},{t:"L'arrivée d'Hitler au pouvoir",r:2},
+   {t:"La Seconde Guerre mondiale",r:3},{t:"Le traité de Rome (CEE)",r:4},{t:"La chute du mur de Berlin",r:5}]},
+ {titre:"Range ces étapes de la construction européenne.",ev:[
+   {t:"La CECA (charbon et acier)",r:1},{t:"Le traité de Rome (CEE)",r:2},
+   {t:"Le traité de Maastricht (UE)",r:3},{t:"La mise en circulation de l'euro",r:4},{t:"L'élargissement à l'Est",r:5}]},
+ {titre:"Range ces moments de la Seconde Guerre mondiale.",ev:[
+   {t:"La défaite de la France (1940)",r:1},{t:"L'appel du général de Gaulle (18 juin 1940)",r:2},
+   {t:"Le débarquement en Normandie (6 juin 1944)",r:3},{t:"La libération de Paris (août 1944)",r:4},
+   {t:"La capitulation de l'Allemagne (8 mai 1945)",r:5}]},
+ {titre:"Range ces avancées de la République française.",ev:[
+   {t:"La loi de laïcité (séparation des Églises et de l'État)",r:1},{t:"Le droit de vote des femmes",r:2},
+   {t:"La création de la Sécurité sociale",r:3},{t:"Le début de la Ve République",r:4},
+   {t:"L'abolition de la peine de mort",r:5}]}
+];
+
+var DOCS=[
+ {theme:"Guerres totales 1914-1945",type:"Lettre",titre:"Lettre d'un poilu, 1916",
+  source:"Texte d'invention, d'après des témoignages de soldats de Verdun.",
+  texte:"« Depuis des semaines, nous vivons sous un déluge d'obus. La terre tremble jour et nuit. Beaucoup de camarades sont tombés. À l'arrière, on nous dit que les usines tournent sans cesse et que même les femmes y fabriquent des armes. Toute la nation est dans la guerre. »",
+  nature:{q:"Quelle est la nature de ce document ?",c:["une affiche de propagande","une lettre d'un soldat","un discours officiel","un article de loi"],a:1,e:"C'est une lettre écrite par un soldat (un « poilu ») depuis le front."},
+  prelever:{q:"D'après le texte, qui fabrique des armes à l'arrière ?",c:["uniquement des soldats","les femmes, dans les usines","des enfants","personne"],a:1,e:"Le texte précise que « même les femmes » travaillent dans les usines d'armement."},
+  expliquer:{q:"Ce document illustre l'idée que la guerre 1914-1918 est…",c:["une guerre courte","une guerre totale","une guerre coloniale","une guerre de religion"],a:1,e:"Mobilisation des soldats, de l'économie et des civils : c'est une guerre totale."},
+  rediger:{q:"En 2 à 4 lignes, explique ce qu'est une « guerre totale » en t'appuyant sur le document.",
+    model:"Une guerre totale mobilise toutes les forces d'un pays. Au front, des millions de soldats combattent. Mais l'arrière aussi est mobilisé : le document montre que les usines tournent sans cesse et que les femmes y fabriquent des armes. Toute la nation participe à l'effort de guerre."}},
+ {theme:"Guerres totales 1914-1945",type:"Texte documentaire",titre:"Un régime totalitaire dans les années 1930",
+  source:"Texte de synthèse, d'après des manuels d'histoire.",
+  texte:"« Dans ce pays, un seul parti est autorisé et le chef détient tous les pouvoirs. La presse, la radio et le cinéma sont contrôlés par l'État, qui diffuse sa propagande. La police surveille la population et ceux qui s'opposent sont arrêtés. Les enfants sont encadrés très tôt dans des organisations de jeunesse. »",
+  nature:{q:"Quelle est la nature de ce document ?",c:["un texte décrivant un régime totalitaire","une publicité","un poème","une carte"],a:0,e:"C'est un texte documentaire qui décrit le fonctionnement d'un régime totalitaire."},
+  prelever:{q:"D'après le texte, comment les opposants sont-ils traités ?",c:["ils sont récompensés","ils sont arrêtés","ils dirigent l'État","ils votent librement"],a:1,e:"Le texte indique que ceux qui s'opposent sont arrêtés."},
+  expliquer:{q:"Le contrôle des médias par l'État illustre…",c:["la liberté de la presse","l'encadrement des esprits par la propagande","la démocratie","la séparation des pouvoirs"],a:1,e:"Parti unique, propagande, surveillance : ce sont des caractéristiques du totalitarisme."},
+  rediger:{q:"Cite trois caractéristiques d'un régime totalitaire d'après le document.",
+    model:"Un régime totalitaire repose d'abord sur un parti unique et un chef tout-puissant. Ensuite, l'État contrôle les médias pour diffuser sa propagande et encadre la jeunesse. Enfin, la police surveille la population et réprime les opposants : il n'y a ni liberté ni démocratie."}},
+ {theme:"Guerres totales 1914-1945",type:"Texte documentaire",titre:"Le génocide des Juifs d'Europe",
+  source:"Texte de synthèse, d'après les travaux des historiens.",
+  texte:"« Pendant la Seconde Guerre mondiale, le régime nazi décide d'exterminer les Juifs d'Europe. Ils sont d'abord recensés, privés de leurs droits, puis déportés. Dans des centres de mise à mort, des millions de personnes — hommes, femmes et enfants — sont assassinées parce qu'elles sont juives. Les Tsiganes sont aussi victimes de ce projet d'extermination. »",
+  nature:{q:"Quelle est la nature de ce document ?",c:["un texte expliquant un génocide","une affiche","un discours d'un dirigeant","une chanson"],a:0,e:"C'est un texte documentaire qui explique le génocide des Juifs (la Shoah)."},
+  prelever:{q:"D'après le texte, pourquoi ces personnes sont-elles assassinées ?",c:["pour leurs idées politiques","parce qu'elles sont juives","par hasard","pour des raisons économiques"],a:1,e:"Elles sont assassinées parce qu'elles sont juives : c'est un crime fondé sur l'origine."},
+  expliquer:{q:"Comment appelle-t-on l'extermination programmée de tout un peuple ?",c:["une bataille","un génocide","une révolution","une crise"],a:1,e:"L'extermination planifiée d'un groupe humain entier est un génocide ; celui des Juifs est appelé la Shoah."},
+  rediger:{q:"Explique en quelques lignes ce qu'est le génocide des Juifs (la Shoah).",
+    model:"Pendant la Seconde Guerre mondiale, le régime nazi organise l'extermination des Juifs d'Europe : c'est la Shoah. Les Juifs sont recensés, privés de leurs droits, déportés, puis assassinés en masse dans des centres de mise à mort, uniquement parce qu'ils sont juifs. Les Tsiganes sont aussi victimes de ce génocide."}},
+ {theme:"Guerres totales 1914-1945",type:"Texte documentaire",titre:"Résister pendant l'Occupation",
+  source:"Texte de synthèse.",
+  texte:"« En juin 1940, la France est vaincue et occupée par l'Allemagne nazie. Depuis Londres, le général de Gaulle appelle les Français à continuer le combat : c'est la France libre. En France, des hommes et des femmes entrent dans la Résistance. Ils diffusent des journaux clandestins, renseignent les Alliés et mènent des actions contre l'occupant, au péril de leur vie. »",
+  nature:{q:"Quelle est la nature de ce document ?",c:["un texte sur la Résistance pendant l'Occupation","une publicité","une chanson","une carte"],a:0,e:"Texte documentaire sur la France libre et la Résistance."},
+  prelever:{q:"D'où le général de Gaulle appelle-t-il à poursuivre le combat ?",c:["de Paris","de Londres","de Berlin","de Vichy"],a:1,e:"De Gaulle lance son appel depuis Londres (18 juin 1940)."},
+  expliquer:{q:"Que font les résistants d'après le texte ?",c:["ils collaborent avec l'occupant","ils luttent clandestinement contre l'occupant","ils quittent le pays","ils dirigent l'Allemagne"],a:1,e:"Journaux clandestins, renseignement, actions : ils résistent à l'occupant nazi."},
+  rediger:{q:"Explique ce qu'étaient la France libre et la Résistance.",
+    model:"Après la défaite de juin 1940, la France est occupée par l'Allemagne nazie. Depuis Londres, le général de Gaulle appelle à continuer le combat : c'est la France libre. En France, des résistants luttent clandestinement contre l'occupant : ils diffusent des journaux interdits, renseignent les Alliés et mènent des actions, en risquant leur vie."}},
+ {theme:"Le monde depuis 1945",type:"Texte documentaire",titre:"Berlin, ville divisée (1961)",
+  source:"Texte de synthèse.",
+  texte:"« En 1961, un mur est construit dans Berlin. D'un côté, l'Est communiste, allié de l'URSS ; de l'autre, l'Ouest, allié des États-Unis. Le mur empêche les habitants de l'Est de passer à l'Ouest. Berlin devient le symbole d'un monde coupé en deux blocs qui s'opposent sans se faire directement la guerre. »",
+  nature:{q:"Quelle est la nature de ce document ?",c:["un texte sur la division de Berlin","une affiche publicitaire","un règlement scolaire","un graphique"],a:0,e:"C'est un texte documentaire sur la division de Berlin pendant la guerre froide."},
+  prelever:{q:"D'après le texte, que sépare le mur de Berlin ?",c:["la France et l'Allemagne","l'Est communiste et l'Ouest","Paris et Berlin","l'Europe et l'Amérique"],a:1,e:"Le mur sépare l'Est communiste (URSS) de l'Ouest (États-Unis)."},
+  expliquer:{q:"Le mur de Berlin est le symbole…",c:["de la réconciliation","du monde bipolaire de la guerre froide","de la colonisation","de la mondialisation"],a:1,e:"Deux blocs opposés sans guerre directe : c'est la guerre froide."},
+  rediger:{q:"Explique pourquoi Berlin est un symbole de la guerre froide.",
+    model:"Pendant la guerre froide, le monde est divisé en deux blocs : l'Ouest, mené par les États-Unis, et l'Est communiste, mené par l'URSS. À Berlin, un mur sépare les deux camps dès 1961. La ville devient ainsi le symbole d'un monde coupé en deux, où les deux blocs s'opposent sans s'affronter directement."}},
+ {theme:"Le monde depuis 1945",type:"Texte documentaire",titre:"La fin des empires coloniaux",
+  source:"Texte de synthèse.",
+  texte:"« Après 1945, les peuples colonisés réclament leur indépendance. En 1947, l'Inde devient indépendante du Royaume-Uni ; Gandhi y a défendu une lutte non violente. Dans les années 1960, de nombreux pays d'Afrique deviennent indépendants. En Algérie, une guerre oppose la France aux indépendantistes de 1954 à 1962, date de l'indépendance. »",
+  nature:{q:"Quelle est la nature de ce document ?",c:["un texte sur la décolonisation","une affiche","un poème","un règlement"],a:0,e:"Texte documentaire sur la fin des empires coloniaux."},
+  prelever:{q:"Quand l'Inde devient-elle indépendante ?",c:["en 1945","en 1947","en 1962","en 1989"],a:1,e:"L'Inde devient indépendante en 1947."},
+  expliquer:{q:"Que défend Gandhi en Inde ?",c:["la guerre totale","une lutte non violente","la colonisation","la dictature"],a:1,e:"Gandhi prône la non-violence pour obtenir l'indépendance de l'Inde."},
+  rediger:{q:"Explique ce qu'est la décolonisation à l'aide du document.",
+    model:"La décolonisation est l'accession à l'indépendance des peuples colonisés après 1945. En 1947, l'Inde devient indépendante du Royaume-Uni grâce notamment à la lutte non violente de Gandhi. Dans les années 1960, beaucoup de pays africains deviennent indépendants. En Algérie, l'indépendance est obtenue en 1962, après une guerre contre la France."}},
+ {theme:"La France et l'Europe",type:"Texte documentaire",titre:"Construire l'Europe après la guerre",
+  source:"Texte de synthèse.",
+  texte:"« Après deux guerres mondiales, des pays européens décident de s'unir pour garantir la paix. En 1951, six pays créent la CECA (charbon et acier). En 1957, le traité de Rome établit un marché commun (la CEE). En 1992, le traité de Maastricht crée l'Union européenne. Aujourd'hui, 27 pays en font partie et beaucoup utilisent l'euro. »",
+  nature:{q:"Quelle est la nature de ce document ?",c:["un texte sur la construction européenne","une publicité","une carte électorale","une loi"],a:0,e:"Texte documentaire sur les étapes de la construction européenne."},
+  prelever:{q:"Que crée le traité de Maastricht en 1992 ?",c:["la CECA","l'Union européenne","l'ONU","l'euro uniquement"],a:1,e:"Le traité de Maastricht (1992) crée l'Union européenne."},
+  expliquer:{q:"Pourquoi des pays européens décident-ils de s'unir ?",c:["pour faire la guerre","pour garantir la paix et coopérer","pour coloniser","pour se séparer"],a:1,e:"Après deux guerres mondiales, l'union vise d'abord la paix et la coopération."},
+  rediger:{q:"Raconte les grandes étapes de la construction européenne.",
+    model:"Après les deux guerres mondiales, des pays européens s'unissent pour garantir la paix. En 1951, six pays créent la CECA, puis en 1957 le traité de Rome établit un marché commun (la CEE). En 1992, Maastricht crée l'Union européenne. Aujourd'hui, l'UE compte 27 États, dont beaucoup partagent l'euro."}},
+ {theme:"Le monde depuis 1945",type:"Texte documentaire",titre:"Un monde nouveau après 1989",
+  source:"Texte de synthèse.",
+  texte:"« En 1989, le mur de Berlin tombe ; en 1991, l'URSS disparaît. La guerre froide est terminée et le monde n'est plus coupé en deux blocs. Mais de nouvelles tensions apparaissent. Le 11 septembre 2001, des attentats frappent les États-Unis : le terrorisme devient une menace majeure dans un monde devenu multipolaire. »",
+  nature:{q:"Quelle est la nature de ce document ?",c:["un texte sur le monde depuis 1989","une affiche publicitaire","une chanson","un graphique"],a:0,e:"Texte documentaire sur les bouleversements du monde après 1989."},
+  prelever:{q:"Que se passe-t-il en 1991 d'après le texte ?",c:["la chute du mur de Berlin","la disparition de l'URSS","les attentats du 11 septembre","la création de l'UE"],a:1,e:"En 1991, l'URSS disparaît, ce qui met fin à la guerre froide."},
+  expliquer:{q:"Comment qualifier le monde après 1989 ?",c:["bipolaire","multipolaire","colonial","totalitaire"],a:1,e:"Le monde n'est plus partagé en deux blocs : il devient multipolaire, avec de nouvelles tensions."},
+  rediger:{q:"Explique comment le monde change après 1989.",
+    model:"En 1989, le mur de Berlin tombe et en 1991 l'URSS disparaît : la guerre froide se termine et le monde n'est plus divisé en deux blocs. Le monde devient multipolaire. Mais de nouvelles menaces apparaissent, comme le terrorisme, illustré par les attentats du 11 septembre 2001 aux États-Unis."}},
+ {theme:"Une République repensée",type:"Texte documentaire",titre:"Refonder la République (1944-1945)",
+  source:"Texte de synthèse.",
+  texte:"« À la Libération, la France rétablit la République. En 1944, les femmes obtiennent le droit de vote. Un gouvernement provisoire, dirigé par de Gaulle, applique le programme de la Résistance : en 1945, la Sécurité sociale est créée pour protéger les travailleurs face à la maladie, aux accidents et à la vieillesse. »",
+  nature:{q:"Quelle est la nature de ce document ?",c:["un texte sur la refondation de la République","une publicité","un poème","une carte"],a:0,e:"Texte documentaire sur la refondation de la République à la Libération."},
+  prelever:{q:"Qu'obtiennent les femmes en 1944 ?",c:["la Sécurité sociale","le droit de vote","la retraite","un emploi"],a:1,e:"En 1944, les femmes obtiennent le droit de vote."},
+  expliquer:{q:"À quoi sert la Sécurité sociale créée en 1945 ?",c:["à faire la guerre","à protéger les travailleurs (maladie, vieillesse…)","à voter","à coloniser"],a:1,e:"La Sécurité sociale protège les travailleurs : c'est un nouveau droit social."},
+  rediger:{q:"Montre que la République est refondée à la Libération.",
+    model:"À la Libération, la France rétablit la République et la démocratie. En 1944, les femmes obtiennent enfin le droit de vote. Le gouvernement provisoire, dirigé par de Gaulle, applique le programme de la Résistance : en 1945, la Sécurité sociale est créée pour protéger les travailleurs. La République repart sur de nouvelles bases sociales."}},
+ {theme:"Une République repensée",type:"Texte documentaire",titre:"La naissance de la Ve République (1958)",
+  source:"Texte de synthèse.",
+  texte:"« En 1958, face à une grave crise, le général de Gaulle revient au pouvoir et fait adopter une nouvelle Constitution : c'est la Ve République. Le président de la République obtient de larges pouvoirs. À partir de 1962, il est élu directement par les citoyens, au suffrage universel. »",
+  nature:{q:"Quelle est la nature de ce document ?",c:["un texte sur la naissance de la Ve République","une affiche","une chanson","une carte"],a:0,e:"Texte documentaire sur la fondation de la Ve République."},
+  prelever:{q:"Qui revient au pouvoir en 1958 ?",c:["Napoléon","le général de Gaulle","Jules Ferry","Jean Jaurès"],a:1,e:"En 1958, le général de Gaulle revient au pouvoir."},
+  expliquer:{q:"Quelle nouveauté apparaît à partir de 1962 ?",c:["le président est élu au suffrage universel","la France devient une monarchie","les femmes votent pour la première fois","la République disparaît"],a:0,e:"Depuis 1962, le président est élu directement par les citoyens (suffrage universel)."},
+  rediger:{q:"Explique comment naît la Ve République.",
+    model:"En 1958, une grave crise ramène le général de Gaulle au pouvoir. Il fait adopter une nouvelle Constitution qui fonde la Ve République et donne de larges pouvoirs au président. À partir de 1962, celui-ci est élu directement par les citoyens, au suffrage universel : c'est encore le régime de la France aujourd'hui."}},
+ {theme:"Une République repensée",type:"Texte documentaire",titre:"Les femmes dans la société française (1944-1975)",
+  source:"Texte de synthèse.",
+  texte:"« En 1944, les Françaises obtiennent le droit de vote. Dans les années 1960-1970, de plus en plus de femmes travaillent et réclament l'égalité. En 1965, une femme mariée peut travailler et ouvrir un compte en banque sans l'autorisation de son mari. En 1975, la loi Veil autorise l'interruption volontaire de grossesse. »",
+  nature:{q:"Quelle est la nature de ce document ?",c:["un texte sur l'évolution des droits des femmes","une publicité","un poème","une carte électorale"],a:0,e:"Texte documentaire sur l'évolution de la place des femmes."},
+  prelever:{q:"D'après le texte, qu'obtiennent les femmes en 1944 ?",c:["le droit de travailler","le droit de vote","la loi Veil","un compte en banque"],a:1,e:"En 1944, les femmes obtiennent le droit de vote."},
+  expliquer:{q:"Ces évolutions montrent surtout…",c:["un recul des droits","une progression de l'égalité femmes-hommes","la fin de la République","un retour en arrière"],a:1,e:"Vote, travail, autonomie, loi Veil : les droits des femmes progressent vers l'égalité."},
+  rediger:{q:"Montre, à l'aide du document, que la place des femmes évolue après 1944.",
+    model:"Après 1944, la place des femmes progresse nettement. Elles obtiennent d'abord le droit de vote. Puis elles travaillent de plus en plus et gagnent en autonomie : en 1965, une femme mariée peut travailler et avoir un compte sans l'accord de son mari. Enfin, la loi Veil (1975) autorise l'IVG. La société avance vers l'égalité entre les femmes et les hommes."}},
+ {theme:"Géographie de la France",type:"Texte documentaire",titre:"Vivre dans une aire urbaine",
+  source:"Texte de synthèse.",
+  texte:"« Plus de huit Français sur dix vivent aujourd'hui dans une aire urbaine. Beaucoup habitent loin du centre, dans les espaces périurbains, et utilisent leur voiture pour aller travailler en ville. Les villes s'étendent de plus en plus : c'est l'étalement urbain. »",
+  nature:{q:"Quelle est la nature de ce document ?",c:["un texte de géographie sur les aires urbaines","une affiche","une loi","un discours"],a:0,e:"Texte de géographie sur les aires urbaines en France."},
+  prelever:{q:"Où habitent beaucoup de Français qui travaillent en ville ?",c:["au centre-ville","dans les espaces périurbains","à la campagne isolée","à l'étranger"],a:1,e:"Le texte indique qu'ils habitent dans les espaces périurbains."},
+  expliquer:{q:"L'extension des villes sur les espaces voisins s'appelle…",c:["la désertification","l'étalement urbain","la littoralisation","la décolonisation"],a:1,e:"Les villes s'étalent sur l'espace alentour : c'est l'étalement urbain."},
+  rediger:{q:"Explique ce qu'est une aire urbaine et l'étalement urbain à l'aide du texte.",
+    model:"Une aire urbaine regroupe une ville et les communes autour dont les habitants vont y travailler. Plus de huit Français sur dix y vivent. Beaucoup habitent loin du centre, dans le périurbain, et se déplacent en voiture. Comme les villes s'étendent de plus en plus, on parle d'étalement urbain."}},
+ {theme:"Géographie de la France",type:"Texte documentaire",titre:"Les espaces productifs français",
+  source:"Texte de synthèse.",
+  texte:"« La France produit dans des espaces variés. Son agriculture, moderne, exporte beaucoup. Ses industries se concentrent près des villes, des ports ou des axes de transport. Le tourisme est très important : la France est la première destination touristique du monde. Les services et la recherche se développent dans les grandes métropoles. »",
+  nature:{q:"Quelle est la nature de ce document ?",c:["un texte de géographie sur les espaces productifs","une affiche","une loi","un discours"],a:0,e:"Texte de géographie sur les espaces productifs français."},
+  prelever:{q:"Quelle place la France occupe-t-elle pour le tourisme ?",c:["la dernière","la première destination mondiale","aucune","la dixième"],a:1,e:"La France est la première destination touristique du monde."},
+  expliquer:{q:"Où se concentrent surtout les industries ?",c:["loin de tout","près des villes, des ports et des axes de transport","uniquement en montagne","au centre des champs"],a:1,e:"Les industries s'installent près des villes, des ports et des grands axes de transport."},
+  rediger:{q:"Montre que la France a des espaces productifs variés.",
+    model:"La France produit dans des espaces très variés. Son agriculture moderne exporte beaucoup. Ses industries s'installent près des villes, des ports et des grands axes de transport. Le tourisme est essentiel : la France est la première destination touristique du monde. Enfin, les services et la recherche se concentrent dans les grandes métropoles."}},
+ {theme:"Géographie de la France",type:"Texte documentaire",titre:"Les espaces de faible densité",
+  source:"Texte de synthèse.",
+  texte:"« Certaines régions françaises sont peu peuplées : montagnes et campagnes de la « diagonale des faibles densités », qui traverse le pays du nord-est au sud-ouest. Beaucoup de jeunes les quittent. Mais ces espaces ont des atouts : agriculture de qualité, tourisme vert, énergies renouvelables et cadre de vie. »",
+  nature:{q:"Quelle est la nature de ce document ?",c:["un texte de géographie sur les espaces peu peuplés","une publicité","un poème","une carte électorale"],a:0,e:"Texte de géographie sur les espaces de faible densité."},
+  prelever:{q:"Dans quelle direction s'étend la « diagonale des faibles densités » ?",c:["du nord-est au sud-ouest","d'est en ouest","autour de Paris","du sud au nord"],a:0,e:"Elle s'étend du nord-est au sud-ouest de la France."},
+  expliquer:{q:"Quel atout possèdent ces espaces ?",c:["aucun","le tourisme vert et l'agriculture de qualité","une très forte population","beaucoup d'industries lourdes"],a:1,e:"Malgré le faible peuplement, ces espaces ont de vrais atouts (tourisme vert, agriculture de qualité)."},
+  rediger:{q:"Explique ce que sont les espaces de faible densité et leurs atouts.",
+    model:"Les espaces de faible densité sont des régions peu peuplées : montagnes et campagnes de la « diagonale des faibles densités », du nord-est au sud-ouest. Beaucoup de jeunes les quittent, ce qui pose problème. Mais ils ont des atouts : agriculture de qualité, tourisme vert, énergies renouvelables et cadre de vie agréable."}},
+ {theme:"Aménager le territoire",type:"Texte documentaire",titre:"Les territoires d'outre-mer",
+  source:"Texte de synthèse.",
+  texte:"« La France possède des territoires éloignés de la métropole : la Guadeloupe, la Martinique, la Guyane, La Réunion et Mayotte. Très loin de l'Europe, ils connaissent des difficultés comme le chômage et l'isolement. Mais ils sont aussi des atouts : une grande biodiversité, un immense espace maritime et, en Guyane, le centre spatial de Kourou. »",
+  nature:{q:"Quelle est la nature de ce document ?",c:["un texte de géographie sur l'outre-mer français","une affiche","une chanson","un graphique"],a:0,e:"Texte de géographie sur les territoires ultramarins."},
+  prelever:{q:"Que trouve-t-on en Guyane d'après le texte ?",c:["un désert vide","le centre spatial de Kourou","une grande métropole européenne","un glacier"],a:1,e:"La Guyane abrite le centre spatial de Kourou, atout majeur."},
+  expliquer:{q:"Pourquoi l'outre-mer est-il un atout pour la France ?",c:["il n'apporte rien","biodiversité, immense espace maritime, spatial","il est très peuplé","il est proche de Paris"],a:1,e:"Biodiversité, vaste espace maritime, centre spatial : ce sont de réels atouts."},
+  rediger:{q:"Montre que les territoires ultramarins sont à la fois des atouts et des défis.",
+    model:"La France possède des territoires d'outre-mer : Guadeloupe, Martinique, Guyane, La Réunion et Mayotte. Éloignés de la métropole, ils connaissent des difficultés comme le chômage et l'isolement. Mais ce sont aussi de vrais atouts : une grande biodiversité, un immense espace maritime et le centre spatial de Kourou. Ils nécessitent un aménagement adapté."}},
+ {theme:"La France et l'Europe",type:"Texte documentaire",titre:"L'Union européenne aujourd'hui",
+  source:"Texte de synthèse.",
+  texte:"« L'Union européenne réunit 27 États. À l'intérieur, on circule librement et on échange sans frontière commerciale. Beaucoup de pays utilisent la même monnaie, l'euro. Mais les pays ne sont pas tous aussi riches : l'UE aide donc les régions les plus pauvres pour réduire les écarts. »",
+  nature:{q:"Quelle est la nature de ce document ?",c:["un texte de géographie sur l'Union européenne","une affiche","une loi","un poème"],a:0,e:"Texte de géographie sur l'Union européenne aujourd'hui."},
+  prelever:{q:"Combien d'États compte l'Union européenne ?",c:["12","27","50","6"],a:1,e:"L'Union européenne réunit 27 États."},
+  expliquer:{q:"Pourquoi l'UE aide-t-elle certaines régions ?",c:["pour les punir","pour réduire les écarts de richesse","pour faire la guerre","pour fermer les frontières"],a:1,e:"Les pays n'ont pas la même richesse : l'UE aide les régions les plus pauvres."},
+  rediger:{q:"Présente l'Union européenne à l'aide du document.",
+    model:"L'Union européenne réunit 27 États. À l'intérieur, les personnes circulent librement et les marchandises s'échangent sans frontière commerciale. Beaucoup de pays partagent la même monnaie, l'euro. Mais tous ne sont pas aussi riches : l'UE aide donc les régions les plus pauvres pour réduire les inégalités."}}
+];
+
+var LONGUE=[
+ {sujet:"Montrez que la Première Guerre mondiale est une guerre totale.",
+  parties:["Une mobilisation militaire et humaine","Une mobilisation de l'économie et de la société"],
+  idees:[
+   {t:"Des millions de soldats sont mobilisés sur le front.",part:0},
+   {t:"De nouvelles armes très meurtrières sont utilisées (gaz, mitrailleuses).",part:0},
+   {t:"Les usines fabriquent des armes jour et nuit.",part:1},
+   {t:"Les femmes remplacent les hommes dans les usines et les champs.",part:1},
+   {t:"L'État oriente toute l'économie vers la guerre.",part:1},
+   {t:"Napoléon gagne la bataille d'Austerlitz.",part:null},
+   {t:"La guerre ne dure que quelques semaines.",part:null}],
+  paragraphe:[
+   {t:"La Première Guerre mondiale est une guerre totale.",r:1},
+   {t:"En effet, elle mobilise toutes les forces des pays en guerre.",r:2},
+   {t:"Sur le front, des millions de soldats combattent avec des armes nouvelles et meurtrières.",r:3},
+   {t:"À l'arrière, l'économie entière sert la guerre : les usines tournent sans cesse et les femmes y travaillent.",r:4},
+   {t:"Ainsi, militaires comme civils sont engagés : c'est bien une guerre totale.",r:5}]},
+ {sujet:"Racontez les grandes étapes de la construction européenne.",
+  parties:["Une union d'abord économique","Une union politique qui s'élargit"],
+  idees:[
+   {t:"En 1951, la CECA met en commun le charbon et l'acier.",part:0},
+   {t:"En 1957, le traité de Rome crée le marché commun (CEE).",part:0},
+   {t:"En 2002, l'euro devient la monnaie de nombreux pays.",part:0},
+   {t:"En 1992, le traité de Maastricht crée l'Union européenne.",part:1},
+   {t:"En 2004, l'UE s'élargit à des pays de l'Est.",part:1},
+   {t:"En 1789 éclate la Révolution française.",part:null},
+   {t:"L'ONU est créée en 1945.",part:null}],
+  paragraphe:[
+   {t:"La construction européenne se fait par étapes depuis 1950.",r:1},
+   {t:"Au début, l'union est surtout économique.",r:2},
+   {t:"Dès 1951 puis 1957, les pays mettent en commun le charbon et l'acier, puis créent un marché commun.",r:3},
+   {t:"Ensuite, l'union devient politique : Maastricht crée l'UE en 1992 et de nouveaux pays la rejoignent.",r:4},
+   {t:"Aujourd'hui, l'UE réunit 27 États et une monnaie commune, l'euro.",r:5}]},
+ {sujet:"Montrez comment les aires urbaines transforment le territoire français.",
+  parties:["Des villes qui concentrent","Des villes qui s'étalent"],
+  idees:[
+   {t:"Plus de 8 Français sur 10 vivent dans une aire urbaine.",part:0},
+   {t:"Les métropoles concentrent emplois, services et universités.",part:0},
+   {t:"Les habitants s'installent de plus en plus loin du centre (périurbain).",part:1},
+   {t:"Les villes s'étendent sur les campagnes : c'est l'étalement urbain.",part:1},
+   {t:"Les déplacements quotidiens en voiture augmentent.",part:1},
+   {t:"La France a colonisé l'Algérie au XIXe siècle.",part:null},
+   {t:"La guerre froide oppose deux blocs.",part:null}],
+  paragraphe:[
+   {t:"Les aires urbaines transforment profondément le territoire français.",r:1},
+   {t:"D'abord, elles concentrent la population et les activités.",r:2},
+   {t:"Les métropoles rassemblent emplois, services et universités, et plus de 8 Français sur 10 y vivent.",r:3},
+   {t:"Ensuite, les villes s'étalent : on habite loin du centre, dans le périurbain, et on se déplace en voiture.",r:4},
+   {t:"Ainsi, la ville façonne aujourd'hui l'organisation de tout le territoire.",r:5}]},
+ {sujet:"Montrez que la Seconde Guerre mondiale est une guerre d'anéantissement.",
+  parties:["Une guerre d'une violence extrême","Le génocide des Juifs et des Tsiganes"],
+  idees:[
+   {t:"La guerre touche le monde entier et fait des dizaines de millions de morts.",part:0},
+   {t:"Les villes et les civils sont bombardés massivement.",part:0},
+   {t:"La bombe atomique est utilisée en 1945.",part:0},
+   {t:"Les Juifs d'Europe sont exterminés : c'est la Shoah.",part:1},
+   {t:"Les nazis assassinent aussi les Tsiganes.",part:1},
+   {t:"Des hommes, des femmes et des enfants sont tués dans des centres de mise à mort.",part:1},
+   {t:"Napoléon est vaincu à Waterloo.",part:null},
+   {t:"La guerre dure seulement un mois.",part:null}],
+  paragraphe:[
+   {t:"La Seconde Guerre mondiale est une guerre d'anéantissement.",r:1},
+   {t:"D'abord, sa violence est extrême : elle touche le monde entier et fait des dizaines de millions de morts.",r:2},
+   {t:"Les civils sont visés : les villes sont bombardées et la bombe atomique est utilisée en 1945.",r:3},
+   {t:"Ensuite, les nazis organisent l'extermination des Juifs (la Shoah) et des Tsiganes.",r:4},
+   {t:"Ainsi, par sa violence et ses génocides, c'est bien une guerre d'anéantissement.",r:5}]},
+ {sujet:"Comment la République française est-elle refondée après 1944 ?",
+  parties:["Rétablir la démocratie","De nouveaux droits sociaux"],
+  idees:[
+   {t:"La République est rétablie à la Libération.",part:0},
+   {t:"En 1944, les femmes obtiennent le droit de vote.",part:0},
+   {t:"De nouvelles élections sont organisées.",part:0},
+   {t:"En 1945, la Sécurité sociale est créée.",part:1},
+   {t:"Le programme de la Résistance prévoit de nouveaux droits.",part:1},
+   {t:"En 1789 éclate la Révolution française.",part:null},
+   {t:"Le mur de Berlin tombe en 1989.",part:null}],
+  paragraphe:[
+   {t:"Après 1944, la République française est refondée.",r:1},
+   {t:"D'abord, la démocratie est rétablie et de nouvelles élections sont organisées.",r:2},
+   {t:"En 1944, les femmes obtiennent le droit de vote, ce qui élargit la démocratie.",r:3},
+   {t:"Ensuite, de nouveaux droits sociaux apparaissent : la Sécurité sociale est créée en 1945.",r:4},
+   {t:"Ainsi, la République repart sur des bases démocratiques et sociales nouvelles.",r:5}]},
+ {sujet:"Montrez que les territoires ultramarins sont des atouts pour la France.",
+  parties:["De réels atouts","Des contraintes à surmonter"],
+  idees:[
+   {t:"L'outre-mer offre une grande biodiversité.",part:0},
+   {t:"Il donne à la France un immense espace maritime.",part:0},
+   {t:"Le centre spatial de Kourou est en Guyane.",part:0},
+   {t:"Ces territoires sont très éloignés de la métropole.",part:1},
+   {t:"Le chômage y est souvent élevé.",part:1},
+   {t:"La construction européenne commence en 1951.",part:null},
+   {t:"La guerre froide oppose deux blocs.",part:null}],
+  paragraphe:[
+   {t:"Les territoires ultramarins sont de véritables atouts pour la France.",r:1},
+   {t:"D'abord, ils offrent une grande biodiversité et un immense espace maritime.",r:2},
+   {t:"La Guyane accueille même le centre spatial de Kourou.",r:3},
+   {t:"Cependant, ces territoires connaissent des contraintes : éloignement et chômage élevé.",r:4},
+   {t:"Ainsi, malgré des difficultés, l'outre-mer est une force pour la France.",r:5}]}
+];
+
+var CRO_AIRE='<svg viewBox="0 0 320 220" class="cro" xmlns="http://www.w3.org/2000/svg"><defs><marker id="arA" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#1b2030"></path></marker></defs><rect width="320" height="220" fill="#eef3e6"></rect><circle cx="160" cy="110" r="96" fill="#dbe7c8" stroke="#9bb37a" stroke-width="2"></circle><circle cx="160" cy="110" r="62" fill="#f2c98a" stroke="#c9913f" stroke-width="2"></circle><circle cx="160" cy="110" r="30" fill="#c0392b" stroke="#7d2017" stroke-width="2"></circle><line x1="40" y1="40" x2="138" y2="92" stroke="#1b2030" stroke-width="3" marker-end="url(#arA)"></line><line x1="284" y1="56" x2="186" y2="96" stroke="#1b2030" stroke-width="3" marker-end="url(#arA)"></line><line x1="160" y1="206" x2="160" y2="146" stroke="#1b2030" stroke-width="3" marker-end="url(#arA)"></line></svg>';
+var CRO_LITT='<svg viewBox="0 0 320 220" class="cro" xmlns="http://www.w3.org/2000/svg"><defs><marker id="arL" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#1b2030"></path></marker></defs><rect width="320" height="220" fill="#cfe3f2"></rect><path d="M0,0 L0,220 L150,220 C168,168 122,128 156,80 C176,50 150,18 196,0 Z" fill="#e9dcc0" stroke="#b8602a" stroke-width="2"></path><rect x="112" y="120" width="46" height="30" fill="#8a7a5c" stroke="#5d5238" stroke-width="2"></rect><rect x="150" y="150" width="40" height="14" fill="#555" stroke="#333" stroke-width="2"></rect><line x1="196" y1="150" x2="280" y2="120" stroke="#1b2030" stroke-width="3" marker-end="url(#arL)"></line><line x1="196" y1="170" x2="280" y2="186" stroke="#1b2030" stroke-width="3" marker-end="url(#arL)"></line></svg>';
+
+var CROQUIS=[
+ {svg:CRO_AIRE,
+  titres:["L'organisation d'une aire urbaine","Une façade maritime","La diagonale des faibles densités","Les frontières de l'Union européenne"],
+  titreA:0,titreE:"Des zones concentriques (centre, banlieue, périurbain) et des flèches de déplacements : c'est une aire urbaine.",
+  legende:[
+   ["la ville-centre (en rouge)","le cœur dense de l'agglomération"],
+   ["la banlieue (en orange)","l'espace urbanisé autour du centre"],
+   ["l'espace périurbain (en vert)","les communes entre ville et campagne"],
+   ["les flèches","les déplacements domicile-travail vers la ville"]]},
+ {svg:CRO_LITT,
+  titres:["Une zone industrialo-portuaire et la littoralisation","Une aire urbaine","Un parc naturel","La francophonie"],
+  titreA:0,titreE:"Un port, une zone industrialo-portuaire et des échanges par la mer : c'est la littoralisation des activités.",
+  legende:[
+   ["la mer (en bleu)","l'espace maritime, voie des échanges"],
+   ["la zone industrialo-portuaire","les usines et entrepôts près du port"],
+   ["les flèches vers le large","les exportations par bateau"],
+   ["le littoral","la bordure de terre au contact de la mer"]]}
+];
+
+var EMC=[
+ {sit:"Dans un groupe de discussion de la classe, plusieurs élèves envoient des messages méchants et des moqueries répétées contre un camarade, qui n'ose plus venir au collège.",
+  acteurs:{q:"Qui sont les principaux acteurs de la situation ?",c:["seulement le professeur","les élèves auteurs, la victime et l'établissement","les parents d'élèves uniquement","la mairie"],a:1,e:"Les acteurs sont les élèves auteurs, la victime, et l'établissement (qui doit agir)."},
+  probleme:{q:"De quel problème s'agit-il ?",c:["d'un simple jeu","de cyberharcèlement","d'une compétition sportive","d'un problème de notes"],a:1,e:"Des moqueries répétées en ligne contre une personne : c'est du cyberharcèlement."},
+  valeur:{q:"Quel droit ou quelle valeur est d'abord en jeu ?",c:["la liberté de tout dire","le respect et la dignité de la personne","le droit de propriété","la liberté de circulation"],a:1,e:"Le respect d'autrui et la dignité ; le harcèlement est interdit par le règlement et la loi."},
+  solution:{q:"Que doit faire l'établissement ?",c:["ne rien faire","protéger la victime, sanctionner les auteurs et prévenir","exclure la victime","fermer le collège"],a:1,e:"Protéger la victime, sanctionner les auteurs, faire de la prévention ; la justice peut être saisie."},
+  justification:{q:"Explique pourquoi le cyberharcèlement est grave et interdit.",
+   model:"Le cyberharcèlement, ce sont des moqueries ou insultes répétées en ligne contre une personne. Il porte atteinte au respect et à la dignité de la victime, qui souffre et n'ose plus venir au collège. C'est interdit par le règlement intérieur et puni par la loi. L'établissement doit protéger la victime, sanctionner les auteurs et faire de la prévention."}},
+ {sit:"Au collège public, un élève demande s'il a le droit de porter un signe religieux visible pendant les cours.",
+  acteurs:{q:"Quels sont les acteurs concernés ?",c:["l'élève, l'établissement et la loi","seulement la mairie","les commerçants du quartier","la presse"],a:0,e:"L'élève, l'établissement scolaire et la loi (qui fixe les règles)."},
+  probleme:{q:"Quel principe est en jeu ?",c:["la liberté du commerce","la laïcité à l'école","le droit de vote","la sécurité routière"],a:1,e:"C'est la question de la laïcité à l'école publique."},
+  valeur:{q:"Que garantit la laïcité à l'école publique ?",c:["l'interdiction de toute religion dans la vie privée","la neutralité de l'école et le respect de toutes les croyances","l'obligation d'avoir une religion","la fin des cours d'histoire"],a:1,e:"La laïcité assure la neutralité de l'école et la liberté de conscience de chacun."},
+  solution:{q:"Que prévoit la loi à l'école publique (depuis 2004) ?",c:["le port de signes religieux ostensibles y est interdit","tout est autorisé","la religion y est obligatoire","filles et garçons sont séparés"],a:0,e:"Depuis la loi de 2004, les signes religieux ostensibles sont interdits à l'école publique."},
+  justification:{q:"Explique en quelques lignes ce qu'est la laïcité à l'école.",
+   model:"La laïcité est un principe de la République : l'État et l'école publique sont neutres et n'imposent aucune religion. Elle garantit à chacun la liberté de croire ou de ne pas croire, dans le respect des autres. À l'école publique, depuis la loi de 2004, le port de signes religieux ostensibles est interdit, pour que tous les élèves soient traités de la même façon."}},
+ {sit:"Sur un réseau social, un internaute publie des propos qui insultent et menacent un groupe de personnes en raison de leur origine.",
+  acteurs:{q:"Quels sont les acteurs de la situation ?",c:["l'auteur des propos, les victimes et la justice","seulement le réseau social","les enseignants","les sportifs"],a:0,e:"L'auteur des propos, les personnes visées (victimes) et la justice."},
+  probleme:{q:"Le problème posé est…",c:["une opinion ordinaire","des propos haineux et illégaux","une publicité","un débat politique normal"],a:1,e:"Insulter et menacer des personnes pour leur origine, ce sont des propos haineux, illégaux."},
+  valeur:{q:"Quelle est la limite de la liberté d'expression ici ?",c:["il n'y a aucune limite","on ne peut pas insulter, menacer ni inciter à la haine","on ne peut rien dire","seuls les adultes peuvent s'exprimer"],a:1,e:"La liberté d'expression s'arrête à l'injure, la diffamation et l'incitation à la haine, punies par la loi."},
+  solution:{q:"Que peut-il se passer pour l'auteur des propos ?",c:["rien","des poursuites et des sanctions pénales","une récompense","une élection"],a:1,e:"L'auteur peut être poursuivi et sanctionné par la justice."},
+  justification:{q:"Explique pourquoi la liberté d'expression a des limites.",
+   model:"La liberté d'expression permet à chacun de donner son opinion : c'est un droit fondamental. Mais elle n'autorise pas tout : insulter, diffamer ou inciter à la haine contre des personnes est interdit et puni par la loi. Cette limite protège la dignité et la sécurité d'autrui. L'auteur de propos haineux peut donc être poursuivi en justice."}},
+ {sit:"Pour un stage de 3e, deux élèves ont le même niveau, mais une entreprise refuse l'une « parce que c'est une fille ».",
+  acteurs:{q:"Quels sont les acteurs concernés ?",c:["l'élève, l'entreprise et la loi","les autres élèves seulement","la cantine","la région"],a:0,e:"L'élève concernée, l'entreprise qui refuse, et la loi qui interdit les discriminations."},
+  probleme:{q:"De quoi s'agit-il ?",c:["d'un choix normal","d'une discrimination","d'une promotion","d'un règlement de stage"],a:1,e:"Refuser quelqu'un pour son sexe est une discrimination."},
+  valeur:{q:"Quel principe est bafoué ?",c:["la liberté de circulation","l'égalité (et la non-discrimination)","le droit de propriété","la laïcité"],a:1,e:"Le principe d'égalité : on ne peut pas écarter quelqu'un pour son sexe."},
+  solution:{q:"Que peut faire l'élève victime ?",c:["rien","signaler la discrimination, qui est interdite et punie","changer d'avis","abandonner l'école"],a:1,e:"Elle peut signaler ces faits : la discrimination est interdite et punie par la loi."},
+  justification:{q:"Explique pourquoi cette situation est une discrimination interdite.",
+   model:"L'élève est refusée non pour ses compétences mais « parce que c'est une fille » : c'est une discrimination fondée sur le sexe. Or la République garantit l'égalité entre les femmes et les hommes et interdit les discriminations. Refuser une personne pour son sexe, son origine ou sa religion est puni par la loi : l'élève peut donc signaler ces faits."}},
+ {sit:"À 16 ans, un adolescent doit se faire recenser en mairie, puis participer à la Journée défense et citoyenneté (JDC). Il se demande à quoi cela sert.",
+  acteurs:{q:"Quels sont les acteurs concernés ?",c:["le jeune citoyen, la mairie et l'État","seulement une armée étrangère","les commerçants","les sportifs"],a:0,e:"Le jeune citoyen, la mairie et l'État (la Nation)."},
+  probleme:{q:"De quoi s'agit-il ?",c:["d'un loisir","du lien entre le citoyen et la défense du pays","d'un examen scolaire","d'un voyage"],a:1,e:"C'est le devoir de participer à la défense et de connaître la citoyenneté."},
+  valeur:{q:"Quelle idée est en jeu ?",c:["la consommation","la solidarité nationale et la citoyenneté","le profit","la mode"],a:1,e:"La défense repose sur la solidarité de tous les citoyens envers la Nation."},
+  solution:{q:"Que doit faire le jeune ?",c:["refuser tout","se faire recenser puis suivre la JDC","quitter le pays","payer une amende"],a:1,e:"Le recensement à 16 ans puis la JDC sont obligatoires pour tous les jeunes."},
+  justification:{q:"Explique pourquoi la défense concerne tous les citoyens.",
+   model:"La défense du pays n'est pas seulement l'affaire de l'armée : elle concerne tous les citoyens. À 16 ans, chaque jeune se fait recenser, puis participe à la Journée défense et citoyenneté. Cette journée informe sur la défense nationale et rappelle que la sécurité du pays repose sur la solidarité de tous. C'est un devoir lié à la citoyenneté."}},
+ {sit:"Une élève veut être utile : elle hésite à devenir déléguée de classe, à aider une association ou à participer à une collecte de solidarité.",
+  acteurs:{q:"Qui sont les acteurs ?",c:["l'élève, sa classe et les associations","seulement les professeurs","la police","les entreprises"],a:0,e:"L'élève, ses camarades et les associations qui accueillent l'engagement."},
+  probleme:{q:"De quoi parle cette situation ?",c:["d'une punition","de l'engagement citoyen","d'un problème de notes","d'un voyage scolaire"],a:1,e:"Il s'agit des différentes formes d'engagement dans la vie collective."},
+  valeur:{q:"Quelle valeur est mise en avant ?",c:["l'égoïsme","la fraternité et la solidarité","la compétition","l'indifférence"],a:1,e:"S'engager pour les autres, c'est faire vivre la fraternité et la solidarité."},
+  solution:{q:"Comment l'élève peut-elle s'engager ?",c:["en ne faisant rien","en devenant déléguée ou bénévole, par exemple","en quittant l'école","en se moquant des autres"],a:1,e:"Déléguée, bénévole, service civique plus tard : il existe de nombreuses formes d'engagement."},
+  justification:{q:"Explique pourquoi l'engagement est important en démocratie.",
+   model:"En démocratie, les citoyens ne se contentent pas de voter : ils peuvent s'engager pour les autres. Cette élève peut devenir déléguée de classe, aider une association ou participer à une collecte. Ces actions font vivre la fraternité et la solidarité, et rendent la société plus juste. L'engagement de chacun est essentiel à la vie démocratique."}},
+ {sit:"Sur un réseau social, une information spectaculaire circule beaucoup. Un élève veut la partager, mais rien ne prouve qu'elle est vraie.",
+  acteurs:{q:"Qui sont les acteurs ?",c:["l'élève, les internautes et les médias","seulement les sportifs","la mairie","les commerçants"],a:0,e:"L'élève, les autres internautes et les médias (sources d'information)."},
+  probleme:{q:"Quel est le problème ?",c:["une information vérifiée","une possible fausse information (fake news)","une publicité officielle","un cours d'histoire"],a:1,e:"L'information n'est pas vérifiée : c'est peut-être une fausse information."},
+  valeur:{q:"Quelle attitude est attendue d'un citoyen ?",c:["tout croire et partager","faire preuve d'esprit critique et vérifier","ne jamais s'informer","insulter les autres"],a:1,e:"Le citoyen doit développer son esprit critique et vérifier les sources."},
+  solution:{q:"Que doit faire l'élève avant de partager ?",c:["partager tout de suite","vérifier la source et croiser les informations","supprimer son compte","inventer une autre information"],a:1,e:"Vérifier l'origine de l'information et la croiser avec des sources fiables."},
+  justification:{q:"Explique pourquoi il faut vérifier une information avant de la partager.",
+   model:"Sur les réseaux sociaux, beaucoup d'informations circulent sans être vraies : ce sont des fake news. Avant de partager, un citoyen responsable doit faire preuve d'esprit critique : vérifier l'origine de l'information et la comparer à des sources fiables. Sinon, il risque de propager une fausse nouvelle. S'informer sérieusement est essentiel en démocratie."}},
+ {sit:"Une application gratuite demande l'accès aux photos, aux contacts et à la position d'un élève. Un autre élève partage une photo de lui sans lui demander.",
+  acteurs:{q:"Qui sont les acteurs ?",c:["l'élève, l'application et les autres utilisateurs","seulement l'État","la cantine","les enseignants uniquement"],a:0,e:"L'élève concerné, l'application qui collecte des données, et les autres utilisateurs."},
+  probleme:{q:"Quel est le problème ?",c:["la liberté du commerce","la protection des données personnelles et de la vie privée","la sécurité routière","le droit de vote"],a:1,e:"Il s'agit du respect de la vie privée et de la protection des données personnelles."},
+  valeur:{q:"Quel droit est en jeu ?",c:["le droit de tout publier","le droit au respect de la vie privée et à l'image","le droit de propriété sur un terrain","la liberté de circulation"],a:1,e:"Chacun a droit au respect de sa vie privée et de son image."},
+  solution:{q:"Que peut faire l'élève ?",c:["tout accepter sans lire","limiter les accès et demander le retrait de la photo","publier les données des autres","ignorer le problème"],a:1,e:"Limiter les autorisations de l'appli, protéger ses données, et demander le retrait d'une photo publiée sans accord."},
+  justification:{q:"Explique pourquoi il faut protéger ses données personnelles.",
+   model:"Sur Internet, nos données personnelles (photos, contacts, position) ont de la valeur et peuvent être utilisées sans notre accord. Chacun a pourtant droit au respect de sa vie privée et de son image. L'élève doit donc limiter les accès qu'il donne aux applications et protéger ses informations. De même, on ne publie pas la photo de quelqu'un sans son autorisation : c'est la loi."}}
+];
+
+var CORRIGE=[
+ {sujet:"Montre que la Première Guerre mondiale est une guerre totale.",
+  mauvaise:"La Première Guerre mondiale est une guerre très importante. Il y a eu beaucoup de morts et c'était horrible. Les gens n'étaient pas contents.",
+  defauts:[{t:"Des phrases trop vagues",present:true},{t:"Aucun exemple ni connaissance précise",present:true},{t:"Le mot « totale » n'est pas expliqué",present:true},{t:"Une erreur de date",present:false}],
+  explain:"La réponse ne dit jamais POURQUOI la guerre est « totale ». Elle reste vague et n'apporte aucune connaissance précise.",
+  corrige:"La Première Guerre mondiale est une guerre totale car elle mobilise toute la nation. Au front, des millions de soldats combattent avec des armes nouvelles (gaz, mitrailleuses). À l'arrière, les usines fabriquent des armes et les femmes y travaillent. Militaires et civils sont donc engagés dans le conflit."},
+ {sujet:"Quand et pourquoi la Ve République naît-elle ?",
+  mauvaise:"La Ve République est née en 1981 avec de Gaulle, pour donner plus de pouvoir au Parlement.",
+  defauts:[{t:"Une erreur de date",present:true},{t:"Une confusion sur les faits",present:true},{t:"Des phrases trop vagues",present:false},{t:"Hors-sujet",present:false}],
+  explain:"Deux erreurs : la Ve République naît en 1958 (pas 1981), et elle renforce le PRÉSIDENT, pas le Parlement.",
+  corrige:"La Ve République naît en 1958, quand le général de Gaulle revient au pouvoir face à une grave crise. Une nouvelle Constitution donne de larges pouvoirs au président de la République, bientôt élu au suffrage universel."},
+ {sujet:"Comment les aires urbaines transforment-elles le territoire français ?",
+  mauvaise:"La France est un pays d'Europe avec une grande histoire. Paris est la capitale et il y a la tour Eiffel. C'est une belle ville touristique.",
+  defauts:[{t:"Hors-sujet : la question n'est pas traitée",present:true},{t:"Aucune notion de géographie (aire urbaine, périurbain)",present:true},{t:"Des phrases trop vagues",present:true},{t:"Une erreur de date",present:false}],
+  explain:"La réponse parle de la France en général, mais jamais des aires urbaines : c'est hors-sujet.",
+  corrige:"Les aires urbaines transforment le territoire car elles concentrent la population et les activités : plus de 8 Français sur 10 y vivent. Les villes s'étalent sur les campagnes (étalement urbain) et les habitants, installés dans le périurbain, multiplient les trajets domicile-travail en voiture."},
+ {sujet:"À l'aide du texte, explique ce qu'est l'étalement urbain.",
+  mauvaise:"Le texte dit que les villes s'étendent de plus en plus. C'est écrit dans le document.",
+  defauts:[{t:"La réponse recopie le document sans expliquer",present:true},{t:"Aucune explication avec le cours",present:true},{t:"Réponse beaucoup trop courte",present:true},{t:"Une confusion de dates",present:false}],
+  explain:"Recopier le document ne suffit pas : il faut EXPLIQUER la notion avec ses connaissances.",
+  corrige:"L'étalement urbain est l'extension des villes sur les espaces voisins. Comme le dit le texte, les villes « s'étendent de plus en plus » : de nouveaux quartiers et lotissements s'installent loin du centre, dans le périurbain, ce qui augmente les déplacements en voiture."},
+ {sujet:"Explique ce qu'est la laïcité à l'école.",
+  mauvaise:"La laïcité, c'est quand la religion est interdite partout en France.",
+  defauts:[{t:"Une confusion : la laïcité n'interdit pas les religions",present:true},{t:"Une affirmation fausse",present:true},{t:"Rien sur l'école précisément",present:true},{t:"Un bon exemple précis",present:false}],
+  explain:"La laïcité ne supprime pas les religions : elle garantit la neutralité de l'État et la liberté de croire ou non.",
+  corrige:"La laïcité garantit la neutralité de l'État et de l'école publique, et la liberté de croire ou non. Elle n'interdit pas les religions : elle les respecte toutes. À l'école publique, depuis 2004, les signes religieux ostensibles sont interdits, pour traiter tous les élèves de la même façon."},
+ {sujet:"Qu'est-ce que le génocide des Juifs (la Shoah) ?",
+  mauvaise:"C'est quand il y a eu une guerre entre les Juifs et les nazis pendant la Seconde Guerre mondiale.",
+  defauts:[{t:"Une confusion : ce n'est pas une guerre mais une extermination",present:true},{t:"Le mot « génocide » n'est pas employé",present:true},{t:"Des phrases trop vagues",present:true},{t:"Une erreur de date",present:false}],
+  explain:"Ce n'était pas un combat entre deux camps, mais l'extermination programmée d'un peuple : un génocide.",
+  corrige:"Le génocide des Juifs (la Shoah) est l'extermination programmée des Juifs d'Europe par le régime nazi pendant la Seconde Guerre mondiale. Recensés, privés de droits, déportés, des millions de personnes ont été assassinées dans des centres de mise à mort, uniquement parce qu'elles étaient juives. Les Tsiganes en ont aussi été victimes."},
+ {sujet:"Quels sont les atouts des territoires ultramarins ?",
+  mauvaise:"Les territoires d'outre-mer sont des îles loin de la France où il fait chaud et où on part en vacances.",
+  defauts:[{t:"Les vrais atouts ne sont pas cités",present:true},{t:"Des phrases trop vagues",present:true},{t:"Aucune notion (ZEE, biodiversité, spatial)",present:true},{t:"Une erreur de date",present:false}],
+  explain:"Le tourisme est un atout, mais la réponse oublie l'essentiel : le domaine maritime, la biodiversité, le spatial.",
+  corrige:"Les territoires ultramarins offrent de réels atouts : une grande biodiversité, un immense domaine maritime (ZEE) qui fait de la France une puissance maritime, et des activités stratégiques comme le centre spatial de Kourou en Guyane. Le tourisme y est aussi important."},
+ {sujet:"Comment l'Europe se construit-elle ?",
+  mauvaise:"L'Europe s'est construite en 1789 pour faire la guerre aux autres pays.",
+  defauts:[{t:"Une grosse erreur de date (1789 = Révolution)",present:true},{t:"Une confusion : l'Europe se construit pour la PAIX",present:true},{t:"Aucune étape citée (CECA, CEE, Maastricht)",present:true},{t:"Une réponse bien structurée",present:false}],
+  explain:"1789, c'est la Révolution française. La construction européenne commence après 1945, et pour garantir la paix.",
+  corrige:"La construction européenne commence après 1945 pour garantir la paix. En 1951, six pays créent la CECA ; en 1957, le traité de Rome établit un marché commun (CEE). En 1992, Maastricht crée l'Union européenne, qui réunit aujourd'hui 27 États et une monnaie commune, l'euro."}
+];
+
+/* ============ CONSTRUCTEURS DE MODES ============ */
+function docHtml(d){ return '<div class="doc">'+(d.theme?'<div class="doc-theme">'+esc(d.theme)+'</div>':'')+'<div class="doc-type">'+esc(d.type)+'</div><div class="doc-title">'+esc(d.titre)+'</div><div class="doc-text">'+d.texte+'</div><div class="doc-source">'+d.source+'</div></div>'; }
+function mcqStep(it,eyebrow){ return function(done){ showMCQ({eyebrow:eyebrow||"Repère",prompt:it.q,choices:it.c,answer:it.a,explain:it.e},done); }; }
+function orderStep(it){ return function(done){ showOrder({eyebrow:"Dans l'ordre",prompt:it.titre,items:it.ev.map(function(e){return {t:e.t,r:e.r};})},done); }; }
+
+function docSteps(d){ var dh=docHtml(d); return [
+ function(done){showMCQ({docHtml:dh,eyebrow:"1 · Identifier le document",prompt:d.nature.q,choices:d.nature.c,answer:d.nature.a,explain:d.nature.e},done);},
+ function(done){showMCQ({docHtml:dh,eyebrow:"2 · Prélever une information",prompt:d.prelever.q,choices:d.prelever.c,answer:d.prelever.a,explain:d.prelever.e},done);},
+ function(done){showMCQ({docHtml:dh,eyebrow:"3 · Expliquer avec le cours",prompt:d.expliquer.q,choices:d.expliquer.c,answer:d.expliquer.a,explain:d.expliquer.e},done);},
+ function(done){showWrite({docHtml:dh,eyebrow:"4 · Rédiger",prompt:d.rediger.q,model:d.rediger.model},done);}
+];}
+
+function longueSteps(s){
+ var model=s.paragraphe.slice().sort(function(a,b){return a.r-b.r;}).map(function(p){return p.t;}).join(" ");
+ return [
+ function(done){showMultiSelect({eyebrow:"Étape 1 · Trier les idées",prompt:"Sujet : « "+s.sujet+" »\nChoisis seulement les idées utiles (écarte le hors-sujet).",items:s.idees.map(function(x){return {t:x.t,good:x.part!==null};}),explain:"On garde les idées qui répondent vraiment au sujet."},done);},
+ function(done){showClassify({eyebrow:"Étape 2 · Construire le plan",prompt:"Classe chaque idée utile dans la bonne partie.",cats:s.parties,items:s.idees.filter(function(x){return x.part!==null;}).map(function(x){return {t:x.t,cat:x.part};})},done);},
+ function(done){showOrder({eyebrow:"Étape 3 · Rédiger un paragraphe",prompt:"Remets les phrases dans l'ordre : idée → explication → exemple → bilan.",items:s.paragraphe.map(function(p){return {t:p.t,r:p.r};})},done);},
+ function(done){showWrite({eyebrow:"Étape 4 · Se relire",prompt:"Compare ton paragraphe avec un modèle, puis vérifie-le avec la grille.",model:model,checklist:["Le sujet est-il bien traité ?","Le plan est-il clair (2 parties) ?","Y a-t-il des exemples et des dates ?","As-tu utilisé des connecteurs (d'abord, ensuite, ainsi) ?","Y a-t-il une phrase de conclusion ?"]},done);}
+];}
+
+function emcSteps(e){ var dh='<div class="doc"><div class="doc-type">Situation pratique</div><div class="doc-text">'+esc(e.sit)+'</div></div>'; return [
+ function(done){showMCQ({docHtml:dh,eyebrow:"1 · Les acteurs",prompt:e.acteurs.q,choices:e.acteurs.c,answer:e.acteurs.a,explain:e.acteurs.e},done);},
+ function(done){showMCQ({docHtml:dh,eyebrow:"2 · Le problème",prompt:e.probleme.q,choices:e.probleme.c,answer:e.probleme.a,explain:e.probleme.e},done);},
+ function(done){showMCQ({docHtml:dh,eyebrow:"3 · Le droit / la valeur",prompt:e.valeur.q,choices:e.valeur.c,answer:e.valeur.a,explain:e.valeur.e},done);},
+ function(done){showMCQ({docHtml:dh,eyebrow:"4 · La solution",prompt:e.solution.q,choices:e.solution.c,answer:e.solution.a,explain:e.solution.e},done);},
+ function(done){showWrite({docHtml:dh,eyebrow:"5 · Justifier",prompt:e.justification.q,model:e.justification.model},done);}
+];}
+
+function croquisSteps(c){ return [
+ function(done){showMCQ({eyebrow:"1 · Trouver le titre",docHtml:'<div class="schema-wrap">'+c.svg+'</div>',prompt:"Quel titre convient à ce croquis ?",choices:c.titres,answer:c.titreA,explain:c.titreE},done);},
+ function(done){showMatch({eyebrow:"2 · Compléter la légende",prompt:"Associe chaque élément du croquis à sa signification.",svg:c.svg,pairs:c.legende},done);}
+];}
+
+/* ============ LANCEURS ============ */
+var _last={};
+function pickFresh(arr,key){ if(arr.length<2)return arr[0]; var i; do{i=Math.floor(Math.random()*arr.length);}while(i===_last[key]); _last[key]=i; return arr[i]; }
+function startRepere(){ var steps=pick(REP_MCQ,8).map(function(it){return mcqStep(it,"Repère");}); steps.push(orderStep(pickFresh(REP_ORDER,"ord"))); runSequence("Repères",steps); }
+function startDoc(){ runSequence("Doc Express",docSteps(pickFresh(DOCS,"doc"))); }
+function startLongue(){ runSequence("Réponse longue",longueSteps(pickFresh(LONGUE,"long"))); }
+function startCroquis(){ runSequence("Croquis / schéma",croquisSteps(pickFresh(CROQUIS,"cro"))); }
+function startEMC(){ runSequence("EMC · situation pratique",emcSteps(pickFresh(EMC,"emc"))); }
+function corrigeSteps(){ return pick(CORRIGE,4).map(function(it){ return function(done){ showCorrige(it,done); }; }); }
+function startCorrige(){ runSequence("Réponse à corriger",corrigeSteps()); }
+
+function brevetStep(si,fn){ return function(done){ fn(function(pts){ if(S.brevet)S.brevet.sec[si].earned+=(pts||0); done(pts); }); }; }
+function startBrevet(){
+  var doc=pickFresh(DOCS,"doc"), cro=pickFresh(CROQUIS,"cro"), lng=pickFresh(LONGUE,"long"), emcd=pickFresh(EMC,"emc");
+  var good=lng.idees.filter(function(x){return x.part!==null;}).length;
+  var connMax=good*4 + good*5 + 15;
+  S.brevet={sec:[
+    {label:"Repères & langages",w:10,max:50+10+cro.legende.length*5,earned:0},
+    {label:"Étude de document",w:25,max:30,earned:0},
+    {label:"Rédaction",w:25,max:16,earned:0},
+    {label:"Connaissances",w:30,max:connMax,earned:0},
+    {label:"EMC",w:10,max:48,earned:0}
+  ]};
+  var ds=docSteps(doc), ls=longueSteps(lng), es=emcSteps(emcd), cs=croquisSteps(cro);
+  var steps=[];
+  pick(REP_MCQ,5).forEach(function(it){ steps.push(brevetStep(0,mcqStep(it,"Repère"))); });
+  steps.push(brevetStep(1,ds[0])); steps.push(brevetStep(1,ds[1])); steps.push(brevetStep(1,ds[2]));
+  steps.push(brevetStep(2,ds[3]));
+  steps.push(brevetStep(0,cs[0])); steps.push(brevetStep(0,cs[1]));
+  steps.push(brevetStep(3,ls[0])); steps.push(brevetStep(3,ls[1])); steps.push(brevetStep(3,ls[2]));
+  steps.push(brevetStep(2,ls[3]));
+  es.forEach(function(s){ steps.push(brevetStep(4,s)); });
+  S.timer=true; S.timeLeft=20*60;
+  runSequence("Brevet blanc",steps,brevetBilan);
+  startTimer();
+}
+
+/* ============ BILAN ============ */
+function bilan(timeout){
+  stopTimer(); sound("win");
+  var msg;
+  if(timeout) msg="Le temps est écoulé ! Comme le jour J, l'important est de gérer son temps. Recommence pour aller plus vite.";
+  else if(S.score>=110) msg="Excellent ! Tu maîtrises l'épreuve. Continue comme ça.";
+  else if(S.score>=60) msg="Bon travail. Refais un tour pour viser encore plus haut.";
+  else msg="C'est un début. Reprends les explications et recommence : tu vas progresser vite.";
+  app.innerHTML='<div class="bar"><div class="bar-l"><button class="home-btn" data-act="home">‹</button><span class="mode-name">'+esc(S.label)+'</span></div></div>'
+   +'<div class="card bilan"><div class="eyebrow">Bilan de la session</div><div class="big-score">'+S.score+' points</div>'
+   +'<div class="explain" style="text-align:left">'+msg+'</div>'
+   +'<button class="cont" data-act="home">Revenir à l\'accueil</button></div>';
+}
+
+function brevetBilan(){
+  stopTimer(); sound("win");
+  var total=0;
+  S.brevet.sec.forEach(function(s){ s.pct=s.max?Math.round(100*s.earned/s.max):0; if(s.pct>100)s.pct=100; total+=s.pct*s.w/100; });
+  total=Math.round(total);
+  var rows=S.brevet.sec.map(function(s){
+    var cls=s.pct>=65?"bf-good":(s.pct>=40?"bf-mid":"bf-low");
+    return '<div class="brow"><span class="blab">'+s.label+' <em>'+s.w+'%</em></span>'
+      +'<span class="bbar"><span class="bfill '+cls+'" style="width:'+s.pct+'%"></span></span>'
+      +'<span class="bpct">'+s.pct+'%</span></div>';
+  }).join("");
+  var msg=total>=80?"Excellent niveau — prêt(e) pour le jour J !":total>=50?"Bon niveau d'ensemble. Travaille en priorité les domaines en orange ou rouge.":"Reprends les domaines en rouge et recommence : c'est comme ça qu'on progresse.";
+  app.innerHTML='<div class="bar"><div class="bar-l"><button class="home-btn" data-act="home">‹</button><span class="mode-name">Brevet blanc</span></div></div>'
+   +'<div class="card bilan"><div class="eyebrow">Brevet blanc — ton bulletin</div>'
+   +'<div class="big-score">'+total+'<span class="hundred"> / 100</span></div>'
+   +'<div class="bullet">'+rows+'</div>'
+   +'<div class="explain" style="text-align:left;margin-top:14px">'+msg+'</div>'
+   +'<button class="cont" data-act="home">Revenir à l\'accueil</button></div>';
+  S.brevet=null;
+}
+
+/* ============ ACCUEIL ============ */
+function home(){
+  stopTimer(); S.steps=[]; S.timer=false;
+  var modes=[
+   {n:"Mode 1",t:"Doc Express",d:"Un document, 4 questions : identifier, prélever, expliquer, rédiger.",f:"startDoc"},
+   {n:"Mode 2 · le cœur",t:"Réponse longue",d:"Construire un développement étape par étape, comme à l'épreuve.",f:"startLongue"},
+   {n:"Mode 3",t:"Repères",d:"Dates, événements, notions, et frises à remettre dans l'ordre.",f:"startRepere"},
+   {n:"Mode 4",t:"Croquis / schéma",d:"Trouver le titre et compléter la légende d'un croquis de géo.",f:"startCroquis"},
+   {n:"Mode 5",t:"EMC",d:"Une situation concrète : acteurs, problème, valeur, solution, justification.",f:"startEMC"},
+   {n:"Mode 6",t:"Réponse à corriger",d:"Devenir correcteur : repérer hors-sujet, dates fausses, phrases vagues.",f:"startCorrige"}
+  ];
+  var h='<header class="hero"><div class="kicker">Le Grand Défi Brevet</div>'
+   +'<h1 class="serif">L\'Atelier <span class="pen">du Brevet</span></h1>'
+   +'<p>Histoire · Géographie · EMC — des exercices comme à l\'épreuve : analyser un document, rédiger, classer, justifier. Pas seulement des QCM.</p></header>'
+   +'<div class="modes">';
+  modes.forEach(function(m){ h+='<button class="mode-card" data-go="'+m.f+'"><div class="mc-num">'+m.n+'</div><div class="mc-title">'+m.t+'</div><div class="mc-desc">'+m.d+'</div></button>'; });
+  h+='<button class="mode-card exam" data-go="startBrevet"><div class="mc-num">Épreuve blanche ⏱</div><div class="mc-title">Brevet blanc</div><div class="mc-desc">20 min chrono : repères, document, croquis, réponse longue et EMC. Bulletin noté sur 100, par domaine.</div></button>';
+  h+='</div><div class="foot">Révision libre · aucune donnée enregistrée · sons activables d\'un clic</div>';
+  app.innerHTML=h;
+  app.querySelectorAll("[data-go]").forEach(function(b){ b.onclick=function(){ try{if(!actx)actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){} window[b.dataset.go](); }; });
+}
+
+home();
+</script>
+</body>
+</html>
